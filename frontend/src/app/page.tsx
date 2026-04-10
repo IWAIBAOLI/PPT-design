@@ -1,8 +1,8 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Play, CheckCircle, AlertCircle, FileText, Loader2, ArrowRight, Edit, Save, RefreshCw, FolderOpen } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Play, CheckCircle, AlertCircle, Loader2, ArrowRight, Edit, Save, RefreshCw, FolderOpen } from 'lucide-react';
 import ProjectList from '@/components/ProjectList';
 import StepArtifactsViewer from '@/components/StepArtifactsViewer';
 
@@ -13,17 +13,7 @@ interface StepStatus {
   output: string | null;
 }
 
-interface BriefData {
-  project_name: string;
-  style_definition: any;
-  required_layouts: any[];
-}
-
-import { createClient } from '@/lib/supabase/client';
-
 export default function Home() {
-  const supabase = createClient();
-
   const [pipelineState, setPipelineState] = useState<Record<string, StepStatus>>({
     dna: { step: 'dna', state: 'idle', message: '', output: null },
     assets: { step: 'assets', state: 'idle', message: '', output: null },
@@ -65,6 +55,19 @@ export default function Home() {
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [showProjectList, setShowProjectList] = useState(false);
   const [refreshArtifacts, setRefreshArtifacts] = useState(0);
+  const [storageMode, setStorageMode] = useState<'local' | 'supabase'>('local');
+  const [projectRootInput, setProjectRootInput] = useState('');
+  const [projectRoot, setProjectRoot] = useState<string | null>(null);
+  const [settingsMessage, setSettingsMessage] = useState('');
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [llmApiKey, setLlmApiKey] = useState('');
+  const [llmBaseUrl, setLlmBaseUrl] = useState('');
+  const [llmModel, setLlmModel] = useState('gemini-3-flash-preview');
+  const [llmSettingsMessage, setLlmSettingsMessage] = useState('');
+  const [isSavingLlmSettings, setIsSavingLlmSettings] = useState(false);
+
+  const isStorageReady = storageMode === 'supabase' || Boolean(projectRoot);
+  const isLlmReady = Boolean(llmApiKey.trim() && llmModel.trim());
 
 
 
@@ -76,6 +79,26 @@ export default function Home() {
         if (data.brief) {
           setBriefJson(JSON.stringify(data.brief, null, 2));
         }
+      });
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) return;
+        if (data.storageMode) {
+          setStorageMode(data.storageMode);
+        }
+        const configuredRoot = data.localSettings?.projectRoot || '';
+        const suggestedRoot = data.suggestedProjectRoot || '';
+        setProjectRoot(configuredRoot || null);
+        setProjectRootInput(configuredRoot || suggestedRoot);
+        setLlmApiKey(data.localSettings?.llm?.apiKey || data.effectiveLlmSettings?.apiKey || '');
+        setLlmBaseUrl(data.localSettings?.llm?.baseUrl || data.effectiveLlmSettings?.baseUrl || '');
+        const resolvedModel = data.localSettings?.llm?.model || data.effectiveLlmSettings?.model || 'gemini-3-flash-preview';
+        setLlmModel(resolvedModel);
+        setSelectedModel(resolvedModel);
       });
   }, []);
 
@@ -119,20 +142,82 @@ export default function Home() {
     setSelectedSlides(new Set());
   };
 
+  const saveProjectRoot = async () => {
+    setIsSavingSettings(true);
+    setSettingsMessage('');
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectRoot: projectRootInput }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setSettingsMessage(data.error || 'Failed to save project folder.');
+        return;
+      }
+      if (data.storageMode) {
+        setStorageMode(data.storageMode);
+      }
+      const savedRoot = data.localSettings?.projectRoot || null;
+      setProjectRoot(savedRoot);
+      setProjectRootInput(savedRoot || projectRootInput);
+      setSettingsMessage('Project save folder is ready.');
+    } catch (error) {
+      setSettingsMessage(error instanceof Error ? error.message : 'Failed to save project folder.');
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
+  const saveLlmSettings = async () => {
+    setIsSavingLlmSettings(true);
+    setLlmSettingsMessage('');
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          llm: {
+            apiKey: llmApiKey,
+            baseUrl: llmBaseUrl,
+            model: llmModel,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setLlmSettingsMessage(data.error || 'Failed to save model settings.');
+        return;
+      }
+      setLlmApiKey(data.localSettings?.llm?.apiKey || llmApiKey);
+      setLlmBaseUrl(data.localSettings?.llm?.baseUrl || llmBaseUrl);
+      setLlmModel(data.localSettings?.llm?.model || llmModel);
+      setLlmSettingsMessage('Model settings saved.');
+      if (data.localSettings?.llm?.model) {
+        setSelectedModel(data.localSettings.llm.model);
+      }
+    } catch (error) {
+      setLlmSettingsMessage(error instanceof Error ? error.message : 'Failed to save model settings.');
+    } finally {
+      setIsSavingLlmSettings(false);
+    }
+  };
+
   const fetchPipelineResults = async (projectId: string) => {
     console.log(`[Frontend] Fetching pipeline results for project: ${projectId}`);
-    const { data: results, error } = await supabase
-      .from('pipeline_results')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: true }); // Get latest? actually we might want generic 'latest per step' logic or just overwrite
-
-    if (error) {
-      console.error("Error fetching results:", error);
-      return;
-    }
-
-    if (results && results.length > 0) {
+    try {
+      const res = await fetch(`/api/projects/${projectId}`);
+      const data = await res.json();
+      if (!data.success) {
+        console.error("Error fetching results:", data.error);
+        return;
+      }
+      if (data.storageMode) {
+        setStorageMode(data.storageMode);
+      }
+      const results = data.project?.pipeline_results || [];
+      if (results.length > 0) {
       console.log(`[Frontend] Found ${results.length} past executions.`);
 
       setPipelineState(prev => {
@@ -149,7 +234,7 @@ export default function Home() {
         });
         return newState;
       });
-    } else {
+      } else {
       // Reset if no results found for this project
       setPipelineState({
         dna: { step: 'dna', state: 'idle', message: '', output: null },
@@ -159,6 +244,9 @@ export default function Home() {
         assembly: { step: 'assembly', state: 'idle', message: '', output: null },
         qc: { step: 'qc', state: 'idle', message: '', output: null },
       });
+      }
+    } catch (error) {
+      console.error("Error fetching results:", error);
     }
   }
 
@@ -212,6 +300,9 @@ export default function Home() {
 
       const data = await res.json();
       if (data.success) {
+        if (data.storageMode) {
+          setStorageMode(data.storageMode);
+        }
         const pid = data.project.id;
         // UPDATE STATE IMMEDIATELY
         setCurrentProjectId(pid);
@@ -266,7 +357,7 @@ export default function Home() {
   };
 
   const saveDraftManual = async () => {
-    setDraftMessage('Saving Draft to Cloud...');
+    setDraftMessage('Saving draft...');
     try {
       let json;
       try {
@@ -303,7 +394,7 @@ export default function Home() {
       if (!currentProjectId) {
         const syncResult = await upsertProject({ draft: draftData });
         if (!syncResult.success) {
-          setBriefMessage("Error: Could not sync Draft to DB.");
+          setBriefMessage("Error: Could not sync draft to project storage.");
           return;
         }
       }
@@ -362,13 +453,13 @@ export default function Home() {
         body: JSON.stringify({ action: 'save', brief }),
       });
 
-      // 2. Save to DB (Single Source of Truth)
+      // 2. Save to project storage
       const result = await upsertProject({ brief: brief });
 
       if (res.ok && result.success) {
-        setBriefMessage('Brief Saved to Disk & Cloud.');
+        setBriefMessage('Brief saved to disk and project storage.');
       } else {
-        setBriefMessage(`Save Partial: Disk(${res.ok}), Cloud(${result.success ? 'Y' : 'N'}).`);
+        setBriefMessage(`Save partial: Disk(${res.ok}), Storage(${result.success ? 'Y' : 'N'}).`);
       }
     } catch (e: any) {
       setBriefMessage('Error: ' + e.message);
@@ -422,11 +513,14 @@ export default function Home() {
       // Check if response is JSON (Legacy/Fallback) or Stream
       const contentType = res.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
-        const data = await res.json();
-        if (data.success) {
-          setPipelineState(prev => ({
-            ...prev,
-            [stepKey]: { ...prev[stepKey], state: 'success', message: data.message, output: data.output }
+      const data = await res.json();
+      if (data.success) {
+        if (data.storageMode) {
+          setStorageMode(data.storageMode);
+        }
+        setPipelineState(prev => ({
+          ...prev,
+          [stepKey]: { ...prev[stepKey], state: 'success', message: data.message, output: data.output }
           }));
         } else {
           throw new Error(data.error || 'Unknown error');
@@ -560,10 +654,10 @@ export default function Home() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => runStep(stepKey)}
-            disabled={isRunning || !currentProjectId}
-            title={!currentProjectId ? "Start a Draft first to create a project" : ""}
+            disabled={isRunning || !currentProjectId || !isStorageReady || !isLlmReady}
+            title={!currentProjectId ? "Start a Draft first to create a project" : (!isLlmReady ? "Configure model settings first" : "")}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors
-              ${isRunning || !currentProjectId
+              ${isRunning || !currentProjectId || !isStorageReady || !isLlmReady
                 ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                 : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
           >
@@ -653,6 +747,9 @@ export default function Home() {
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-slate-900">PPT Factory Workflow</h1>
               <p className="text-slate-600 mt-2">End-to-End Presentation Generation Pipeline</p>
+              <p className="text-xs text-slate-500 mt-1">
+                Storage Mode: {storageMode === 'supabase' ? 'Supabase Cloud' : 'Local Filesystem'}
+              </p>
               {currentProjectId && (
                 <div className="mt-2 text-sm text-indigo-600 font-medium">
                   当前项目: {projectName}
@@ -668,16 +765,126 @@ export default function Home() {
               </button>
               <div className="h-6 w-px bg-slate-300"></div>
               <label className="text-sm font-medium text-slate-700">Model:</label>
-              <select
-                value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
-                className="bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="gemini-3-flash-preview">gemini-3-flash-preview</option>
-                <option value="gemini-3-pro-preview">gemini-3-pro-preview</option>
-              </select>
+              <div className="bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-700 min-w-[220px]">
+                {selectedModel || 'Not configured'}
+              </div>
             </div>
           </header>
+
+          {storageMode === 'local' && (
+            <div className="mb-8 grid gap-4">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900">Project Save Folder</h2>
+                    <p className="text-sm text-slate-600 mt-1">
+                      Choose the folder where every project workspace and exported PPT file should be saved.
+                    </p>
+                  </div>
+                  {!isStorageReady && (
+                    <span className="px-2 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
+                      Setup Required
+                    </span>
+                  )}
+                </div>
+                <div className="mt-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+                  This is required. Generation stays locked until a writable folder is saved here.
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <div className="flex-1">
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Project save folder</label>
+                    <input
+                      type="text"
+                      value={projectRootInput}
+                      onChange={(e) => setProjectRootInput(e.target.value)}
+                      placeholder="/Users/your-name/Documents/PPT-Factory"
+                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                    />
+                  </div>
+                  <button
+                    onClick={saveProjectRoot}
+                    disabled={isSavingSettings || !projectRootInput.trim()}
+                    className="self-end bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSavingSettings ? 'Saving...' : 'Save Folder'}
+                  </button>
+                </div>
+                <div className="mt-3 text-xs text-slate-500">
+                  {projectRoot ? `Current folder: ${projectRoot}` : 'No project folder configured yet.'}
+                </div>
+                {settingsMessage && (
+                  <div className={`mt-2 text-xs font-medium ${isStorageReady ? 'text-emerald-600' : 'text-amber-700'}`}>
+                    {settingsMessage}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="mb-8 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Model Settings</h2>
+                <p className="text-sm text-slate-600 mt-1">
+                  Configure the API credentials and model used for generation.
+                </p>
+              </div>
+              {!isLlmReady && (
+                <span className="px-2 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
+                  API Required
+                </span>
+              )}
+            </div>
+            <div className="mt-4 grid gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">LLM API key</label>
+                <input
+                  type="password"
+                  value={llmApiKey}
+                  onChange={(e) => setLlmApiKey(e.target.value)}
+                  placeholder="sk-..."
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Base URL</label>
+                <input
+                  type="text"
+                  value={llmBaseUrl}
+                  onChange={(e) => setLlmBaseUrl(e.target.value)}
+                  placeholder="Optional. Example: https://api.openai.com/v1"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Model name</label>
+                <input
+                  type="text"
+                  value={llmModel}
+                  onChange={(e) => {
+                    setLlmModel(e.target.value);
+                    setSelectedModel(e.target.value);
+                  }}
+                  placeholder="gpt-4o-mini / gemini-3-flash-preview / etc."
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center gap-3">
+              <button
+                onClick={saveLlmSettings}
+                disabled={isSavingLlmSettings || !llmApiKey.trim() || !llmModel.trim()}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSavingLlmSettings ? 'Saving...' : 'Save Model Settings'}
+              </button>
+              {llmSettingsMessage && (
+                <span className={`text-xs font-medium ${isLlmReady ? 'text-emerald-600' : 'text-amber-700'}`}>
+                  {llmSettingsMessage}
+                </span>
+              )}
+            </div>
+          </div>
 
           <div className="grid gap-8">
 
@@ -703,7 +910,7 @@ export default function Home() {
                 />
                 <button
                   onClick={generateDraft}
-                  disabled={isDraftLoading || !!(draftJson && !currentProjectId)} /* Allow generating if no draft or if project exists */
+                  disabled={!isStorageReady || !isLlmReady || isDraftLoading || !!(draftJson && !currentProjectId)} /* Allow generating if no draft or if project exists */
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2"
                 >
                   {isDraftLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit className="w-4 h-4" />}
@@ -711,9 +918,9 @@ export default function Home() {
                 </button>
                 <button
                   onClick={saveDraftManual}
-                  disabled={!draftJson}
+                  disabled={!isStorageReady || !isLlmReady || !draftJson}
                   className="bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center gap-2"
-                  title="Save current draft edits to Database"
+                  title="Save current draft edits to project storage"
                 >
                   <Save className="w-4 h-4" /> Save Draft
                 </button>
@@ -754,7 +961,7 @@ export default function Home() {
               <div className="flex justify-end">
                 <button
                   onClick={generateBrief}
-                  disabled={isBriefLoading || !draftJson || !currentProjectId}
+                  disabled={!isStorageReady || !isLlmReady || isBriefLoading || !draftJson || !currentProjectId}
                   className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   title={!currentProjectId ? "Start a Draft first to create a project" : ""}
                 >

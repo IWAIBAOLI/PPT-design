@@ -3,12 +3,11 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import mime from 'mime'; // You might need to install 'mime' or just hardcode text/html
+import { getGeneratedProjectsDir } from '@/lib/server/project-store';
 
 const ROOT_DIR = path.resolve(process.cwd(), '..');
 const WORK_DIR = path.join(ROOT_DIR, 'pipeline_work');
 const HTML_DIR = path.join(WORK_DIR, '1_html_slides');
-
-const ARCHIVE_DIR = path.join(ROOT_DIR, 'generated_projects');
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -25,10 +24,11 @@ export async function GET(request: Request) {
 
     // 1. Try Project Archive First (if ID provided)
     if (projectId) {
+        const archiveDir = await getGeneratedProjectsDir();
         // Try layout folder first
-        const layoutPath = path.join(ARCHIVE_DIR, projectId, 'layout', cleanFileName);
+        const layoutPath = path.join(archiveDir, projectId, 'layout', cleanFileName);
         // Try assets folder second (for components_preview.html)
-        const assetPath = path.join(ARCHIVE_DIR, projectId, 'assets', cleanFileName);
+        const assetPath = path.join(archiveDir, projectId, 'assets', cleanFileName);
 
         try {
             await fs.access(layoutPath);

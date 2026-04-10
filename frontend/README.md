@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PPT Factory Frontend
 
-## Getting Started
+This is the Next.js frontend for the PPT Factory workflow.
 
-First, run the development server:
+## Storage Modes
+
+The app now supports two storage modes:
+
+- Local mode (default): no Supabase configuration required, but users must choose a writable project save folder before they can start generating files. Projects, pipeline history, and generated file metadata are stored under `<your-project-folder>/.local-store/`.
+- Supabase mode (optional): enabled automatically when both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set.
+
+## Environment Variables
+
+Copy `frontend/.env.local.example` to `frontend/.env.local` if you want to add optional configuration.
+
+Optional variables:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `USE_SUPABASE_STORAGE=true`
+- `ANTHROPIC_API_KEY`
+
+If `USE_SUPABASE_STORAGE` is not set to `true`, the app runs in local storage mode and the UI will require a project folder setup step even if Supabase variables exist locally.
+
+## Development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Production Validation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npx next build --webpack
+```
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Webpack build is currently the most reliable validation path in this repo.

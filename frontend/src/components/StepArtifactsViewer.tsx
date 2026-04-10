@@ -1,4 +1,3 @@
-import { createClient } from '../lib/supabase/client';
 import { FileText, Eye, ChevronDown, ChevronRight, RefreshCw, Monitor, Download } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
@@ -26,38 +25,33 @@ export default function StepArtifactsViewer({ projectId, stepKey, refreshTrigger
     const [loading, setLoading] = useState(false);
     const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set());
 
-    const supabase = createClient();
+    const fetchFiles = async () => {
+        setLoading(true);
+        try {
+            const pathPrefix = `${projectId}/${stepKey}/`;
+            const res = await fetch(`/api/projects/${projectId}`);
+            const payload = await res.json();
+
+            if (!payload.success) {
+                console.error(`Error fetching artifacts for ${stepKey}:`, payload.error);
+            } else {
+                const data = (payload.project?.generated_files || []).filter((file: GeneratedFile) =>
+                    file.storage_path.startsWith(pathPrefix)
+                );
+                setFiles(data);
+                groupFiles(data);
+            }
+        } catch (error) {
+            console.error(`Error fetching artifacts for ${stepKey}:`, error);
+        }
+        setLoading(false);
+    };
 
     useEffect(() => {
         if (projectId && stepKey) {
             fetchFiles();
         }
     }, [projectId, stepKey, refreshTrigger]);
-
-    const fetchFiles = async () => {
-        setLoading(true);
-        // storage_path is like "PROJECT_ID/STEP_NAME/FILENAME"
-        // We filter by containing `/${stepKey}/` to be safe, or just `stepKey` directory check if we want to be strict.
-        // Given the path structure relative to generated_projects: `{projectId}/{stepName}/{fileName}`
-        // We can check if storage_path starts with `{projectId}/{stepKey}/`
-
-        const pathPrefix = `${projectId}/${stepKey}/`;
-
-        const { data, error } = await supabase
-            .from('generated_files')
-            .select('*')
-            .eq('project_id', projectId)
-            .ilike('storage_path', `${pathPrefix}%`) // Filter by path prefix
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            console.error(`Error fetching artifacts for ${stepKey}:`, error);
-        } else if (data) {
-            setFiles(data);
-            groupFiles(data);
-        }
-        setLoading(false);
-    };
 
     const groupFiles = (fileList: GeneratedFile[]) => {
         const groups: Record<string, GeneratedFile[]> = {};

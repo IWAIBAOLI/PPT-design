@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { exec } from 'child_process';
 import util from 'util';
+import { requireLlmConfig } from '@/lib/server/local-settings';
 
 const execPromise = util.promisify(exec);
 
@@ -15,15 +16,19 @@ const GENERATE_SCRIPT = path.join(SKILLS_DIR, 'create_design_brief', 'scripts', 
 // Use the VENV Python
 const VENV_PYTHON = path.join(ROOT_DIR, 'venv', 'bin', 'python3');
 
-// Custom LLM Config
-const LLM_ENV = {
-    ...process.env,
-    OPENAI_API_KEY: 'Gemini-API-maxuning',
-    OPENAI_BASE_URL: 'http://127.0.0.1:8317/v1',
-};
-
 const DRAFT_PATH = path.join(ROOT_DIR, 'pipeline_input', 'content_draft.json');
 const DRAFT_SCRIPT = path.join(SKILLS_DIR, 'draft_content', 'scripts', 'draft_content.py');
+
+async function getLlmEnv(modelOverride?: string): Promise<NodeJS.ProcessEnv> {
+    const llm = await requireLlmConfig();
+    return {
+        ...process.env,
+        OPENAI_API_KEY: llm.apiKey,
+        OPENAI_BASE_URL: llm.baseUrl || process.env.OPENAI_BASE_URL || '',
+        OPENAI_MODEL: modelOverride || llm.model,
+        ANTHROPIC_API_KEY: llm.anthropicApiKey || process.env.ANTHROPIC_API_KEY || '',
+    };
+}
 
 export async function POST(request: Request) {
     try {
@@ -40,7 +45,7 @@ export async function POST(request: Request) {
             console.log(`Executing Draft: ${cmd}`);
 
             // Pass model via env if needed, though draft_content currently hardcodes or uses default
-            const envWithModel: NodeJS.ProcessEnv = { ...LLM_ENV, OPENAI_MODEL: model || (LLM_ENV as any).OPENAI_MODEL };
+            const envWithModel = await getLlmEnv(model);
 
             const { stdout, stderr } = await execPromise(cmd, { env: envWithModel });
             console.log(">> [Draft Script Output]:\n", stdout);
@@ -59,7 +64,7 @@ export async function POST(request: Request) {
             const cmd = `"${VENV_PYTHON}" "${GENERATE_SCRIPT}" "${DRAFT_PATH}" "${BRIEF_PATH}"`;
             console.log(`Executing Brief: ${cmd}`);
 
-            const envWithModel: NodeJS.ProcessEnv = { ...LLM_ENV, OPENAI_MODEL: model || (LLM_ENV as any).OPENAI_MODEL };
+            const envWithModel = await getLlmEnv(model);
 
             const { stdout, stderr } = await execPromise(cmd, { env: envWithModel });
             console.log(stdout);
@@ -78,8 +83,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
 
-    } catch (error: any) {
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        return NextResponse.json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
     }
 }
 
@@ -87,7 +92,7 @@ export async function GET() {
     try {
         const content = await fs.readFile(BRIEF_PATH, 'utf-8');
         return NextResponse.json({ success: true, brief: JSON.parse(content) });
-    } catch (error: any) {
+    } catch {
         return NextResponse.json({ success: true, brief: null });
     }
 }

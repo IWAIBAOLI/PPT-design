@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import {
+    deleteProject,
+    getProjectById,
+    getStorageMode,
+    listGeneratedFiles,
+    listPipelineResults,
+    patchProject,
+} from '@/lib/server/project-store';
 
 export async function GET(
     request: Request,
@@ -7,37 +14,12 @@ export async function GET(
 ) {
     try {
         const { id } = await params;
-        const supabase = await createClient();
-
-        const { data: project, error: projectError } = await supabase
-            .from('projects')
-            .select('*')
-            .eq('id', id)
-            .single();
-
-        if (projectError) {
-            return NextResponse.json({ success: false, error: projectError.message }, { status: 500 });
+        const project = await getProjectById(id);
+        if (!project) {
+            return NextResponse.json({ success: false, error: 'Project not found' }, { status: 404 });
         }
-
-        const { data: results, error: resultsError } = await supabase
-            .from('pipeline_results')
-            .select('*')
-            .eq('project_id', id)
-            .order('created_at', { ascending: true });
-
-        if (resultsError) {
-            return NextResponse.json({ success: false, error: resultsError.message }, { status: 500 });
-        }
-
-        const { data: files, error: filesError } = await supabase
-            .from('generated_files')
-            .select('*')
-            .eq('project_id', id)
-            .order('created_at', { ascending: true });
-
-        if (filesError) {
-            return NextResponse.json({ success: false, error: filesError.message }, { status: 500 });
-        }
+        const results = await listPipelineResults(id);
+        const files = await listGeneratedFiles(id);
 
         return NextResponse.json({
             success: true,
@@ -46,10 +28,11 @@ export async function GET(
                 pipeline_results: results,
                 generated_files: files,
             },
+            storageMode: getStorageMode(),
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('API Error:', error);
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        return NextResponse.json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
     }
 }
 
@@ -60,23 +43,11 @@ export async function PATCH(
     try {
         const { id } = await params;
         const body = await request.json();
-        const supabase = await createClient();
-
-        const { data: project, error } = await supabase
-            .from('projects')
-            .update(body)
-            .eq('id', id)
-            .select()
-            .single();
-
-        if (error) {
-            return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-        }
-
-        return NextResponse.json({ success: true, project });
-    } catch (error: any) {
+        const project = await patchProject(id, body);
+        return NextResponse.json({ success: true, project, storageMode: getStorageMode() });
+    } catch (error: unknown) {
         console.error('API Error:', error);
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        return NextResponse.json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
     }
 }
 
@@ -86,20 +57,10 @@ export async function DELETE(
 ) {
     try {
         const { id } = await params;
-        const supabase = await createClient();
-
-        const { error } = await supabase
-            .from('projects')
-            .delete()
-            .eq('id', id);
-
-        if (error) {
-            return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-        }
-
-        return NextResponse.json({ success: true });
-    } catch (error: any) {
+        await deleteProject(id);
+        return NextResponse.json({ success: true, storageMode: getStorageMode() });
+    } catch (error: unknown) {
         console.error('API Error:', error);
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        return NextResponse.json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
     }
 }

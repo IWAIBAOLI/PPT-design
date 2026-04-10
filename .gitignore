@@ -33,6 +33,9 @@ output/
 generated_projects/
 pipeline_output/
 pipeline_work/
+pipeline_input/content_draft.json
+pipeline_input/full_brief.json
+pipeline_input/draft_image_assets.json
 test_assets/output/
 my_skills/architect_html_layouts/test_output/
 my_skills/define_visual_dna/test_output/

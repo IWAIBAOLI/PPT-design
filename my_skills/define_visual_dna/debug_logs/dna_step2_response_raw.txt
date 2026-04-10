@@ -1,0 +1,291 @@
+:root {
+  /* Primary Style: Cyberpunk UI + Fusion: Dark Mode & Vaporwave */
+  --ppt-color-primary: #01CDFE; /* Vaporwave Cyan */
+  --ppt-color-secondary: #B967FF; /* Vaporwave Purple */
+  --ppt-color-accent: #00FF00; /* Cyberpunk Neon Green */
+  --ppt-color-highlight: #FF71CE; /* Vaporwave Pink */
+  
+  /* Backgrounds (Dark Mode OLED focus) */
+  --ppt-color-bg-main: #000000;
+  --ppt-color-bg-surface: rgba(13, 13, 13, 0.9);
+  --ppt-color-bg-card: rgba(18, 18, 18, 0.8);
+  
+  /* Text System */
+  --ppt-color-text-main: #E0E0E0;
+  --ppt-color-text-secondary: #AAAAAA;
+  --ppt-color-text-neon: #00FF00;
+
+  /* Gradients (Vaporwave Fusion) */
+  --ppt-bg-gradient-main: linear-gradient(180deg, #0D0D0D 0%, #000000 100%);
+  --ppt-gradient-accent: linear-gradient(90deg, #FF71CE, #01CDFE);
+  --ppt-gradient-cyber: linear-gradient(45deg, rgba(185, 103, 255, 0.2), rgba(1, 205, 254, 0.2));
+
+  /* Typography (Bilingual & Cyber-Noir Fusion) */
+  --ppt-font-family-mono: 'Cascadia Code', 'Courier New', 'Microsoft YaHei', monospace;
+  --ppt-font-family-serif: 'Georgia', 'Times New Roman', 'SimSun', serif;
+  --ppt-font-family-main: 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+  --ppt-text-scale-base: 1rem;
+  --ppt-text-scale-ratio: 1.25;
+
+  /* High-End Effects */
+  --ppt-shadow-glow: 0 0 15px rgba(0, 255, 0, 0.5);
+  --ppt-shadow-neon-pink: 0 0 10px #FF71CE;
+  --ppt-shadow-neon-cyan: 0 0 10px #01CDFE;
+  --ppt-glass-bg: rgba(255, 255, 255, 0.05);
+  --ppt-glass-border: rgba(1, 205, 254, 0.3);
+  --ppt-backdrop-blur: blur(12px);
+  
+  /* Spacing (Balanced Density) */
+  --ppt-space-unit: 1.5rem;
+}
+
+/* Base Layout - Fixed 16:9 */
+html, body {
+  width: 1280px;
+  height: 720px;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  background-color: var(--ppt-color-bg-main);
+  color: var(--ppt-color-text-main);
+  font-family: var(--ppt-font-family-main);
+  position: relative;
+}
+
+/* Cyberpunk Scanlines Layer */
+body::before {
+  content: " ";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    rgba(18, 16, 16, 0) 0,
+    rgba(59, 67, 100, 0.05) 50%,
+    rgba(18, 16, 16, 0) 100%
+  );
+  background-size: 100% 4px;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+/* Retro Grid Background (Vaporwave Fusion) */
+body::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 40%;
+  background-image: 
+    linear-gradient(rgba(1, 205, 254, 0.2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(1, 205, 254, 0.2) 1px, transparent 1px);
+  background-size: 40px 40px;
+  transform: perspective(200px) rotateX(60deg);
+  transform-origin: bottom;
+  z-index: -1;
+}
+
+/* Component: Primary Visual Container
+   Usage: Hero areas, title cards, or major focus points.
+   Rationale: Features a dual-tone neon border and dark glass interior. */
+.ppt-card-primary {
+  display: flex;
+  flex-direction: column;
+  background: var(--ppt-color-bg-surface);
+  border: 2px solid;
+  border-image: linear-gradient(to right, var(--ppt-color-primary), var(--ppt-color-secondary)) 1;
+  padding: calc(var(--ppt-space-unit) * 1.5);
+  box-shadow: var(--ppt-shadow-neon-cyan);
+  position: relative;
+}
+
+/* Component: Standard Content Container
+   Usage: General text blocks, descriptions, and data lists.
+   Rationale: High contrast dark mode card with a subtle monospace accent. */
+.ppt-card-standard {
+  display: flex;
+  flex-direction: column;
+  background: var(--ppt-color-bg-card);
+  border-left: 4px solid var(--ppt-color-accent);
+  padding: var(--ppt-space-unit);
+  backdrop-filter: var(--ppt-backdrop-blur);
+}
+
+/* Component: Unit/Widget Container
+   Usage: Grid items, feature icons, or repetitive small cards.
+   Rationale: Lightweight glassmorphism with a thin neon outline. */
+.ppt-card-item {
+  display: flex;
+  flex-direction: column;
+  background: var(--ppt-glass-bg);
+  border: 1px solid var(--ppt-glass-border);
+  padding: 1rem;
+  gap: 0.5rem;
+}
+
+/* Component: Floating/Overlay Layer
+   Usage: Floating labels, tooltips, or callouts over images.
+   Rationale: High-intensity neon glow to ensure separation from background. */
+.ppt-card-overlay {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid var(--ppt-color-highlight);
+  box-shadow: var(--ppt-shadow-neon-pink);
+  padding: 0.75rem 1.25rem;
+}
+
+/* Component: Emphasis/Highlight Container
+   Usage: Key metrics, "Conclusion" boxes, or special announcements.
+   Rationale: Uses the glitch aesthetic and vibrant primary color fill. */
+.ppt-card-highlight {
+  display: flex;
+  flex-direction: column;
+  background: var(--ppt-color-primary);
+  color: #000;
+  padding: var(--ppt-space-unit);
+  font-weight: bold;
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 95% 100%, 0 100%);
+}
+
+/* Typography: Hero Title
+   Usage: Main titles on cover slides.
+   Rationale: Cyber-Noir Serif for an editorial, high-end look. */
+.ppt-text-hero {
+  font-family: var(--ppt-font-family-serif);
+  font-size: 4.5rem;
+  font-weight: 900;
+  line-height: 1.1;
+  color: #FFF;
+  text-transform: uppercase;
+  text-shadow: 3px 3px 0px var(--ppt-color-secondary);
+  margin: 0;
+}
+
+/* Typography: Lead Intro
+   Usage: Subtitles or opening paragraphs.
+   Rationale: Monospace for the "UI" feel. */
+.ppt-text-lead {
+  font-family: var(--ppt-font-family-mono);
+  font-size: 1.75rem;
+  color: var(--ppt-color-primary);
+  letter-spacing: 2px;
+  margin: 0;
+}
+
+/* Typography: Body Text
+   Usage: Standard paragraph text. */
+.ppt-text-body-large {
+  font-size: 1.5rem;
+  line-height: 1.6;
+  color: var(--ppt-color-text-main);
+}
+
+.ppt-text-body-strong {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #FFF;
+}
+
+.ppt-text-body-small {
+  font-size: 0.875rem;
+  color: var(--ppt-color-text-secondary);
+  font-family: var(--ppt-font-family-mono);
+}
+
+/* Visual Decorator: Emphasis Text
+   Usage: Keywords inside a paragraph. */
+.ppt-text-emphasis {
+  color: var(--ppt-color-accent);
+  text-shadow: var(--ppt-shadow-glow);
+  font-weight: bold;
+}
+
+/* Visual Decorator: Marker
+   Usage: Bullet points or section markers. */
+.ppt-accent-marker {
+  width: 12px;
+  height: 12px;
+  background: var(--ppt-color-accent);
+  box-shadow: var(--ppt-shadow-glow);
+  display: inline-block;
+}
+
+/* Visual Decorator: Divider
+   Usage: Separating content sections. */
+.ppt-divider {
+  height: 1px;
+  background: linear-gradient(90deg, var(--ppt-color-primary), transparent);
+  border: none;
+}
+
+/* Frame Decorators */
+.ppt-decorator-frame {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 3rem;
+  background: rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid var(--ppt-glass-border);
+}
+
+.ppt-decorator-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 3rem;
+  font-family: var(--ppt-font-family-mono);
+  font-size: 0.75rem;
+  color: var(--ppt-color-primary);
+}
+
+/* Shape Primitives */
+.ppt-shape-circle {
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  border: 2px solid var(--ppt-color-accent);
+}
+
+.ppt-shape-rounded {
+  border-radius: 8px;
+}
+
+.ppt-shape-pill {
+  border-radius: 50px;
+  padding: 0.25rem 1rem;
+  background: var(--ppt-color-bg-card);
+  border: 1px solid var(--ppt-color-secondary);
+}
+
+/* Background Utilities */
+.ppt-background-main {
+  background: var(--ppt-bg-gradient-main);
+}
+
+.ppt-background-contrast {
+  background: var(--ppt-color-primary);
+  color: #000;
+}
+
+.ppt-background-image {
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+/* Glitch Animation for Highlights */
+@keyframes glitch {
+  0% { transform: skew(0deg); }
+  20% { transform: skew(-2deg); }
+  40% { transform: skew(2deg); }
+  60% { transform: skew(-1deg); }
+  80% { transform: skew(1deg); }
+  100% { transform: skew(0deg); }
+}
+
+.glitch-effect {
+  animation: glitch 1s infinite;
+}

@@ -1,0 +1,78 @@
+{
+  "project_name": "Medical Academic Research Presentation",
+  "style_definition": {
+    "mood_keywords": [
+      "Rigorous",
+      "Humanist",
+      "Sophisticated",
+      "Warm-Professional"
+    ],
+    "color_preference": "A palette of Medical Beige, Warm Amber, Terracotta accents, and Charcoal Grey for text.",
+    "theme_ref": "ref_theme_medical.css",
+    "visual_density": "balanced",
+    "target_audience": "Medical experts, review committees, and clinical researchers"
+  },
+  "design_system_spec": {
+    "information_density": {
+      "selection": "Editorial / Magazine Style",
+      "instruction": "Maintain clean margins and clear hierarchy. Academic content requires space to breathe; use a balanced ratio of white space to text to ensure readability during high-stakes defense."
+    },
+    "grid_system": {
+      "selection": "12-Column Grid + Modular Card UI",
+      "instruction": "Use a 12-column grid to align complex data and text. Encapsulate distinct experimental steps or data points in subtle, rounded cards with soft borders."
+    },
+    "data_visualization": {
+      "selection": "Scientific / Academic",
+      "instruction": "Charts must look rigorous. Use thin lines, clear axis labels, and highlight statistical significance (P < 0.05) with a warm amber glow or callout box."
+    },
+    "typography": {
+      "selection": "Modern Sans + Classic Serif",
+      "instruction": "Use a clean Modern Sans for body text and data. Use a sophisticated Classic Serif for slide titles and 'Q&A' to convey authority and tradition."
+    },
+    "decorations": {
+      "selection": "Medical Motifs",
+      "instruction": "Incorporate subtle background textures like a faint DNA helix, cellular patterns, or microscopic grid lines in the background. Use thin line connectors for flowcharts."
+    },
+    "artistic_style": {
+      "selection": "Warm Clinical Excellence",
+      "instruction": "1. Art Style & Mood: A blend of high-tech laboratory precision with a warm, humanist touch. 2. Materials & Elements: Frosted glass containers, matte paper textures, and organic medical shapes. 3. Light & Space: Soft golden hour sunlight effects hitting glass elements, creating depth through layered transparency."
+    }
+  },
+  "required_layouts": [
+    {
+      "slide_id": "slide_01",
+      "type": "cover_branding",
+      "layout_intent": "Full-bleed background image with warm amber lighting. Center the title in a semi-transparent frosted glass container to maintain high contrast."
+    },
+    {
+      "slide_id": "slide_02",
+      "type": "agenda_list",
+      "layout_intent": "A clean vertical timeline style list. Use amber dots as progress markers for each chapter of the presentation."
+    },
+    {
+      "slide_id": "slide_03",
+      "type": "grid_2_col",
+      "layout_intent": "Split layout. Left side for the text-based challenges. Right side should feature the '15.8%' statistic in a large, bold terracotta font inside a focused card."
+    },
+    {
+      "slide_id": "slide_04",
+      "type": "process_flow",
+      "layout_intent": "Horizontal 3-step process. Each step (Sample, Grouping, Detection) is an icon-topped card connected by a thin dotted line."
+    },
+    {
+      "slide_id": "slide_05",
+      "type": "chart_bar_comparison",
+      "layout_intent": "The chart takes the primary 2/3 of the slide. Use a 'Positive' badge (amber/gold) to highlight the experimental group's breakthrough."
+    },
+    {
+      "slide_id": "slide_06",
+      "type": "grid_4_feature",
+      "layout_intent": "A 2x2 grid representing the 'Pyramid' of logic. Use subtle numbering (1, 2, 3, 4) in the background of each quadrant to show the flow of conclusions."
+    },
+    {
+      "slide_id": "slide_07",
+      "type": "quote_highlight",
+      "layout_intent": "An elegant closing slide. Large Serif 'Q&A' text centered over a blurred, warm background image of a professional clinical setting."
+    }
+  ]
+}

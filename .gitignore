@@ -1,0 +1,46 @@
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+py39
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local environment
+.codex/
+.env
+.env.*
+!.env.example
+!.env.local.example
+!**/.env.example
+!**/.env.local.example
+anthropic-skills/
+
+# Build and generated outputs
+output/
+generated_projects/
+pipeline_output/
+pipeline_work/
+test_assets/output/
+my_skills/architect_html_layouts/test_output/
+my_skills/define_visual_dna/test_output/
+supabase/.temp/
+supabase/.branches/
+
+# Logs and temporary files
+*.log
+*_log.txt
+*.tmp
+
+# Generated presentation files
+*.pptx

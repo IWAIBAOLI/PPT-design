@@ -1,0 +1,221 @@
+{
+  "project_title": "医学学术论文汇报：[此处输入论文题目]",
+  "presentation_goal": "学术成果展示与交流",
+  "target_audience": "医学专家、评审委员、临床医生及同行研究者",
+  "slides": [
+    {
+      "id": "slide_01",
+      "semantic_type": "Cover",
+      "title": "[此处输入研究论文的完整标题]",
+      "subtitle": "汇报人：[姓名] | 指导教师：[导师名] | [所属科室/单位]",
+      "core_message": "开启医学研究汇报，建立专业且有温度的第一印象。",
+      "suggested_layout": "QuoteHero",
+      "content_items": [
+        {
+          "item_type": "visual",
+          "headline": "封面视觉",
+          "image_description": "A high-quality, professional medical research background with warm amber and soft beige lighting. A subtle stethoscope or a DNA helix integrated into a warm-toned, blurred clinical setting. Warm sunlight effect.",
+          "visual_cues": {
+            "style_hint": "Warm professional aesthetics, high clarity"
+          }
+        },
+        {
+          "item_type": "text",
+          "headline": "汇报日期",
+          "body": "202X年X月X日"
+        }
+      ]
+    },
+    {
+      "id": "slide_02",
+      "semantic_type": "Agenda",
+      "title": "汇报提纲",
+      "subtitle": "Presentation Outline",
+      "core_message": "清晰呈现汇报逻辑，引导听众思路。",
+      "suggested_layout": "BulletList",
+      "content_items": [
+        {
+          "item_type": "text",
+          "headline": "研究背景与目的",
+          "body": "介绍选题缘由、临床现状及科学假说。"
+        },
+        {
+          "item_type": "text",
+          "headline": "研究资料与方法",
+          "body": "描述实验设计、对象选择、入组标准及技术路线。"
+        },
+        {
+          "item_type": "text",
+          "headline": "实验结果分析",
+          "body": "核心数据展示、图表解读及统计学差异。"
+        },
+        {
+          "item_type": "text",
+          "headline": "讨论与研究结论",
+          "body": "结果解释、创新点、临床意义及局限性。"
+        }
+      ]
+    },
+    {
+      "id": "slide_03",
+      "semantic_type": "Problem",
+      "title": "研究背景与临床需求",
+      "subtitle": "Background & Clinical Rationale",
+      "core_message": "阐述当前临床治疗的痛点或研究空白。",
+      "suggested_layout": "SplitConstraint",
+      "content_items": [
+        {
+          "item_type": "text",
+          "headline": "临床现状与挑战",
+          "body": "当前在该病种治疗或诊断中存在的主要问题，如生存率低、耐药性或机制不明。",
+          "sub_items": [
+            {
+              "item_type": "text",
+              "headline": "发病趋势",
+              "body": "近年发病率呈上升趋势，对公共卫生构成挑战。"
+            },
+            {
+              "item_type": "text",
+              "headline": "技术瓶颈",
+              "body": "现有治疗手段在某些特定人群中效果不佳。"
+            }
+          ]
+        },
+        {
+          "item_type": "statistic",
+          "headline": "关键流行病学数据",
+          "body": "该领域目前的重要统计指标。",
+          "data_payload": {
+            "value": "15.8",
+            "unit": "%",
+            "trend": "up",
+            "context": "五年内患病率增长"
+          }
+        }
+      ]
+    },
+    {
+      "id": "slide_04",
+      "semantic_type": "Solution",
+      "title": "研究方法与技术路线",
+      "subtitle": "Materials and Methods",
+      "core_message": "严谨的方法学是研究科学性的基石。",
+      "suggested_layout": "ProcessSteps",
+      "content_items": [
+        {
+          "item_type": "concept",
+          "headline": "实验设计流程",
+          "body": "从入组、分组到干预及观察的全流程图解。",
+          "sub_items": [
+            {
+              "item_type": "text",
+              "headline": "样本筛选",
+              "body": "按照严格的纳入与排除标准筛选实验对象（n=...）。"
+            },
+            {
+              "item_type": "text",
+              "headline": "分组干预",
+              "body": "随机双盲对照实验，对照组与实验组同步处理。"
+            },
+            {
+              "item_type": "text",
+              "headline": "检测指标",
+              "body": "采用RT-qPCR, Western Blot及免疫组化等技术检测。"
+            }
+          ]
+        },
+        {
+          "item_type": "visual",
+          "headline": "方法学架构图",
+          "image_description": "A clean, modern flowchart with warm-colored nodes (pale orange and beige). Minimalist icons representing cells, microscopes, and data processing.",
+          "visual_cues": {
+            "status": "neutral"
+          }
+        }
+      ]
+    },
+    {
+      "id": "slide_05",
+      "semantic_type": "Data",
+      "title": "主要实验结果展示",
+      "subtitle": "Key Experimental Results",
+      "core_message": "用核心数据证明研究假说，展示统计学显著性。",
+      "suggested_layout": "DataChart",
+      "content_items": [
+        {
+          "item_type": "chart",
+          "headline": "对照组与实验组指标对比",
+          "body": "实验组在关键指标上表现出明显的改善（P < 0.05）。",
+          "image_description": "A clean bar chart or line graph with warm color palette (Sunset orange, terracotta, and soft grey). High contrast for readability.",
+          "data_payload": {
+            "value": "P < 0.01",
+            "context": "具有极显著统计学差异"
+          }
+        },
+        {
+          "item_type": "text",
+          "headline": "显微形态观察",
+          "body": "HE染色及免疫组化显示，干预后组织损伤明显减轻。",
+          "visual_cues": {
+            "status": "positive",
+            "badge": "关键突破"
+          }
+        }
+      ]
+    },
+    {
+      "id": "slide_06",
+      "semantic_type": "Conclusion",
+      "title": "研究讨论与结论",
+      "subtitle": "Discussion & Conclusion",
+      "core_message": "总结研究价值，升华学术意义。",
+      "suggested_layout": "Grid",
+      "conceptual_metaphor": "Pyramid",
+      "content_items": [
+        {
+          "item_type": "text",
+          "headline": "核心发现",
+          "body": "本研究揭示了[XX信号通路/XX蛋白]在[疾病]中的关键作用。"
+        },
+        {
+          "item_type": "text",
+          "headline": "创新点",
+          "body": "首次发现该机制在特定临床场景下的调节规律。"
+        },
+        {
+          "item_type": "text",
+          "headline": "临床转化意义",
+          "body": "为未来开发针对性治疗药物提供了理论依据。"
+        },
+        {
+          "item_type": "text",
+          "headline": "未来展望",
+          "body": "计划进一步扩大样本量，并进行多中心验证。"
+        }
+      ]
+    },
+    {
+      "id": "slide_07",
+      "semantic_type": "Conclusion",
+      "title": "致谢与问答",
+      "subtitle": "Acknowledgement & Q&A",
+      "core_message": "感谢支持，开放交流。",
+      "suggested_layout": "QuoteHero",
+      "content_items": [
+        {
+          "item_type": "text",
+          "headline": "感谢倾听",
+          "body": "感谢实验室同仁及导师的悉心指导，感谢审稿专家的宝贵意见。请各位专家批评指正。"
+        },
+        {
+          "item_type": "visual",
+          "headline": "结束页视觉",
+          "image_description": "Soft warm lighting over a mahogany desk with a notebook and a medical pen. Professional and warm atmosphere. Text 'Q&A' in elegant serif font.",
+          "visual_cues": {
+            "style_hint": "Warm and respectful"
+          }
+        }
+      ]
+    }
+  ]
+}

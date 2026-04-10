@@ -1,0 +1,52 @@
+:root {
+  /* Primary Style: Swiss Modernism */
+  --ppt-color-bg-main: #F5F5F5;
+  --ppt-font-family: 'Helvetica Now Display', sans-serif;
+
+  /* Advanced Effects */
+  --ppt-bg-gradient-main: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  --ppt-shadow-glow: 0 0 20px rgba(0, 122, 255, 0.3);
+
+  /* Fusion: Glassmorphism Variables */
+  --ppt-glass-bg: rgba(255, 255, 255, 0.7);
+  --ppt-glass-border: rgba(255, 255, 255, 0.4);
+  --ppt-backdrop-blur: blur(20px);
+}
+
+body {
+  background: var(--ppt-bg-gradient-main);
+  /* Use Gradient Background */
+  color: var(--ppt-color-text-main);
+}
+
+/* Component: Primary Visual Container
+   Usage: Use for Hero content, Title Cards, or Key Metrics. 
+   Rationale: Uses high transparency to show the rich background gradient. */
+.ppt-card-primary {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 20px;
+  color: #FFFFFF;
+}
+
+.ppt-text-hero {
+  font-size: 64px;
+  font-weight: 800;
+}
+
+/* --- MOCK DECORATORS FOR TESTING --- */
+.ppt-decor-1 {
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+  border-radius: 50%;
+  filter: blur(40px);
+}
+
+.ppt-decor-2 {
+  width: 150px;
+  height: 150px;
+  border: 2px dashed rgba(0, 0, 0, 0.1);
+  transform: rotate(45deg);
+}

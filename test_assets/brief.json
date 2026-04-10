@@ -1,0 +1,13 @@
+{
+    "style_definition": {
+        "style_name": "Cyberpunk",
+        "artistic_style": "Neon, Futuristic, High-Tech"
+    },
+    "required_layouts": [
+        {
+            "slide_id": "slide_01",
+            "type": "title",
+            "layout_intent": "Hero visual"
+        }
+    ]
+}

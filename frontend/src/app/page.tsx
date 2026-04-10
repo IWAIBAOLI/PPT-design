@@ -1,8 +1,8 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Play, CheckCircle, AlertCircle, Loader2, ArrowRight, Edit, Save, RefreshCw, FolderOpen } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Play, CheckCircle, AlertCircle, Loader2, ArrowRight, Edit, Save, RefreshCw, FolderOpen, ImagePlus } from 'lucide-react';
 import ProjectList from '@/components/ProjectList';
 import StepArtifactsViewer from '@/components/StepArtifactsViewer';
 
@@ -11,6 +11,16 @@ interface StepStatus {
   state: 'idle' | 'running' | 'success' | 'error';
   message: string;
   output: string | null;
+}
+
+interface ProjectImageAsset {
+  fileName: string;
+  size: number;
+  updatedAt: string;
+  width?: number | null;
+  height?: number | null;
+  aspectRatio?: number | null;
+  orientation?: 'landscape' | 'portrait' | 'square' | 'unknown';
 }
 
 export default function Home() {
@@ -42,6 +52,7 @@ export default function Home() {
 
   // Output Preview State
   const [previewFile, setPreviewFile] = useState<string | null>(null);
+  const [previewSequence, setPreviewSequence] = useState<string[]>([]);
 
   // Slide Selection State
   const [availableSlides, setAvailableSlides] = useState<{ id: string, title?: string, type?: string }[]>([]);
@@ -65,22 +76,16 @@ export default function Home() {
   const [llmModel, setLlmModel] = useState('gemini-3-flash-preview');
   const [llmSettingsMessage, setLlmSettingsMessage] = useState('');
   const [isSavingLlmSettings, setIsSavingLlmSettings] = useState(false);
+  const [projectImages, setProjectImages] = useState<ProjectImageAsset[]>([]);
+  const [imageSemanticName, setImageSemanticName] = useState('');
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [imageUploadMessage, setImageUploadMessage] = useState('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isLoadingImages, setIsLoadingImages] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
 
   const isStorageReady = storageMode === 'supabase' || Boolean(projectRoot);
   const isLlmReady = Boolean(llmApiKey.trim() && llmModel.trim());
-
-
-
-  // Load initial brief
-  useEffect(() => {
-    fetch('/api/brief')
-      .then(res => res.json())
-      .then(data => {
-        if (data.brief) {
-          setBriefJson(JSON.stringify(data.brief, null, 2));
-        }
-      });
-  }, []);
 
   useEffect(() => {
     fetch('/api/settings')
@@ -101,6 +106,14 @@ export default function Home() {
         setSelectedModel(resolvedModel);
       });
   }, []);
+
+  useEffect(() => {
+    if (!currentProjectId) {
+      setProjectImages([]);
+      return;
+    }
+    fetchProjectImages(currentProjectId);
+  }, [currentProjectId]);
 
   // Parse Brief for Slides
   useEffect(() => {
@@ -170,6 +183,34 @@ export default function Home() {
     }
   };
 
+  const pickProjectRoot = async () => {
+    setIsSavingSettings(true);
+    setSettingsMessage('');
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'pickProjectRoot' }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setSettingsMessage(data.error || 'Failed to choose project folder.');
+        return;
+      }
+      if (data.storageMode) {
+        setStorageMode(data.storageMode);
+      }
+      const savedRoot = data.localSettings?.projectRoot || null;
+      setProjectRoot(savedRoot);
+      setProjectRootInput(savedRoot || '');
+      setSettingsMessage(savedRoot ? 'Project save folder selected.' : 'No folder selected.');
+    } catch (error) {
+      setSettingsMessage(error instanceof Error ? error.message : 'Failed to choose project folder.');
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
   const saveLlmSettings = async () => {
     setIsSavingLlmSettings(true);
     setLlmSettingsMessage('');
@@ -201,6 +242,23 @@ export default function Home() {
       setLlmSettingsMessage(error instanceof Error ? error.message : 'Failed to save model settings.');
     } finally {
       setIsSavingLlmSettings(false);
+    }
+  };
+
+  const fetchProjectImages = async (projectId: string) => {
+    setIsLoadingImages(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/images`);
+      const data = await res.json();
+      if (!data.success) {
+        setImageUploadMessage(data.error || 'Failed to load project images.');
+        return;
+      }
+      setProjectImages(Array.isArray(data.files) ? data.files : []);
+    } catch (error) {
+      setImageUploadMessage(error instanceof Error ? error.message : 'Failed to load project images.');
+    } finally {
+      setIsLoadingImages(false);
     }
   };
 
@@ -319,26 +377,58 @@ export default function Home() {
     }
   };
 
+  const createProject = async () => {
+    if (!isStorageReady) {
+      setDraftMessage('Set Project Save Folder first.');
+      return;
+    }
+    if (!isLlmReady) {
+      setDraftMessage('Configure model settings first.');
+      return;
+    }
+
+    const trimmedName = projectName.trim() || userPrompt.trim().slice(0, 30) || 'New Project';
+    setDraftMessage('Creating project...');
+    const result = await upsertProject({
+      name: trimmedName,
+      prompt: userPrompt,
+    });
+
+    if (result.success) {
+      setDraftMessage(`Project created: ${trimmedName}`);
+    } else {
+      setDraftMessage(`Create project failed: ${result.error}`);
+    }
+  };
+
   const generateDraft = async () => {
+    if (!currentProjectId) {
+      setDraftMessage('Create a project first, then generate draft.');
+      return;
+    }
     setIsDraftLoading(true);
     setDraftMessage('Drafting content content...');
     try {
       const res = await fetch('/api/brief', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'draft', prompt: userPrompt, model: selectedModel }),
+        body: JSON.stringify({
+          action: 'draft',
+          prompt: userPrompt,
+          model: selectedModel,
+          imageAssets: projectImages,
+        }),
       });
       const data = await res.json();
       if (data.success) {
         setDraftJson(JSON.stringify(data.draft, null, 2));
         setDraftMessage('Content Drafted! Auto-saving...');
 
-        // Auto-Save Project immediately
-        // Pass the draft explicitly to ensure it overrides any stale state
         const result = await upsertProject({
+          id: currentProjectId,
           draft: data.draft,
           prompt: userPrompt,
-          name: userPrompt.substring(0, 20) || "New Draft"
+          name: projectName || userPrompt.substring(0, 20) || 'New Draft',
         });
 
         if (result.success) {
@@ -357,6 +447,10 @@ export default function Home() {
   };
 
   const saveDraftManual = async () => {
+    if (!currentProjectId) {
+      setDraftMessage('Create a project first, then save draft.');
+      return;
+    }
     setDraftMessage('Saving draft...');
     try {
       let json;
@@ -367,7 +461,7 @@ export default function Home() {
         return;
       }
 
-      const result = await upsertProject({ draft: json });
+      const result = await upsertProject({ id: currentProjectId, draft: json });
       if (result.success) {
         setDraftMessage('Draft Saved.');
       } else {
@@ -379,6 +473,10 @@ export default function Home() {
   };
 
   const generateBrief = async () => {
+    if (!currentProjectId) {
+      setBriefMessage('Create a project first, then generate brief.');
+      return;
+    }
     setIsBriefLoading(true);
     setBriefMessage('Consulting Creative Director Agent...');
     try {
@@ -388,15 +486,6 @@ export default function Home() {
       } catch (e) {
         setBriefMessage("Error: Invalid Draft JSON. Fix before generating.");
         return;
-      }
-
-      // Ensure we have a project ID before generation if possible
-      if (!currentProjectId) {
-        const syncResult = await upsertProject({ draft: draftData });
-        if (!syncResult.success) {
-          setBriefMessage("Error: Could not sync draft to project storage.");
-          return;
-        }
       }
 
       const res = await fetch('/api/brief', {
@@ -414,6 +503,7 @@ export default function Home() {
 
         // Auto-Save Project with new Name and Brief
         const result = await upsertProject({
+          id: currentProjectId,
           brief: data.brief,
           name: newName
         });
@@ -435,6 +525,10 @@ export default function Home() {
   };
 
   const saveBrief = async () => {
+    if (!currentProjectId) {
+      setBriefMessage('Create a project first, then save brief.');
+      return;
+    }
     try {
       let brief;
       try {
@@ -454,7 +548,7 @@ export default function Home() {
       });
 
       // 2. Save to project storage
-      const result = await upsertProject({ brief: brief });
+      const result = await upsertProject({ id: currentProjectId, brief: brief });
 
       if (res.ok && result.success) {
         setBriefMessage('Brief saved to disk and project storage.');
@@ -466,7 +560,71 @@ export default function Home() {
     }
   };
 
-  const saveProject = () => upsertProject();
+  const uploadProjectImage = async () => {
+    if (!isStorageReady) {
+      setImageUploadMessage('Set Project Save Folder first, then upload images.');
+      return;
+    }
+    if (!currentProjectId) {
+      setImageUploadMessage('Create a project first, then upload images.');
+      return;
+    }
+    if (!selectedImageFile) {
+      setImageUploadMessage('Choose an image file first.');
+      return;
+    }
+    if (!imageSemanticName.trim()) {
+      setImageUploadMessage('Enter a semantic file name first.');
+      return;
+    }
+
+    setIsUploadingImage(true);
+    setImageUploadMessage('');
+
+    try {
+      const imageDimensions = await new Promise<{ width: number; height: number }>((resolve, reject) => {
+        const objectUrl = URL.createObjectURL(selectedImageFile);
+        const image = new Image();
+        image.onload = () => {
+          resolve({ width: image.naturalWidth, height: image.naturalHeight });
+          URL.revokeObjectURL(objectUrl);
+        };
+        image.onerror = () => {
+          reject(new Error('Could not read image dimensions.'));
+          URL.revokeObjectURL(objectUrl);
+        };
+        image.src = objectUrl;
+      });
+
+      const formData = new FormData();
+      formData.append('file', selectedImageFile);
+      formData.append('semanticName', imageSemanticName.trim());
+      formData.append('width', String(imageDimensions.width));
+      formData.append('height', String(imageDimensions.height));
+
+      const res = await fetch(`/api/projects/${currentProjectId}/images`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to upload image.');
+      }
+
+      await fetchProjectImages(currentProjectId);
+      setImageUploadMessage(`Uploaded: ${data.file.fileName}`);
+      setImageSemanticName('');
+      setSelectedImageFile(null);
+      if (imageInputRef.current) {
+        imageInputRef.current.value = '';
+      }
+    } catch (error) {
+      setImageUploadMessage(error instanceof Error ? error.message : 'Failed to upload image.');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
 
   const loadProject = (project: any) => {
     setCurrentProjectId(project.id);
@@ -479,6 +637,30 @@ export default function Home() {
 
     // FETCH RESULTS
     fetchPipelineResults(project.id);
+  };
+
+  const openPreview = (fileName: string, orderedFiles: string[]) => {
+    setPreviewFile(fileName);
+    setPreviewSequence(orderedFiles);
+  };
+
+  const closePreview = () => {
+    setPreviewFile(null);
+    setPreviewSequence([]);
+  };
+
+  const previewIndex = previewFile ? previewSequence.indexOf(previewFile) : -1;
+  const canGoPrev = previewIndex > 0;
+  const canGoNext = previewIndex >= 0 && previewIndex < previewSequence.length - 1;
+
+  const goToPrevPreview = () => {
+    if (!canGoPrev) return;
+    setPreviewFile(previewSequence[previewIndex - 1]);
+  };
+
+  const goToNextPreview = () => {
+    if (!canGoNext) return;
+    setPreviewFile(previewSequence[previewIndex + 1]);
   };
 
   const runStep = async (stepKey: string) => {
@@ -655,7 +837,7 @@ export default function Home() {
           <button
             onClick={() => runStep(stepKey)}
             disabled={isRunning || !currentProjectId || !isStorageReady || !isLlmReady}
-            title={!currentProjectId ? "Start a Draft first to create a project" : (!isLlmReady ? "Configure model settings first" : "")}
+            title={!currentProjectId ? "Create a project first" : (!isLlmReady ? "Configure model settings first" : "")}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors
               ${isRunning || !currentProjectId || !isStorageReady || !isLlmReady
                 ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
@@ -710,7 +892,7 @@ export default function Home() {
             projectId={currentProjectId}
             stepKey={stepKey}
             refreshTrigger={refreshArtifacts}
-            onPreview={setPreviewFile}
+            onPreview={openPreview}
           />
         )}
 
@@ -790,24 +972,31 @@ export default function Home() {
                 <div className="mt-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
                   This is required. Generation stays locked until a writable folder is saved here.
                 </div>
-                <div className="mt-4 flex gap-2">
-                  <div className="flex-1">
+                <div className="mt-4 flex flex-col gap-3">
+                  <div>
                     <label className="block text-xs font-medium text-slate-600 mb-1">Project save folder</label>
-                    <input
-                      type="text"
-                      value={projectRootInput}
-                      onChange={(e) => setProjectRootInput(e.target.value)}
-                      placeholder="/Users/your-name/Documents/PPT-Factory"
-                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
-                    />
+                    <div className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900">
+                      {projectRoot || 'No folder selected yet.'}
+                    </div>
                   </div>
-                  <button
-                    onClick={saveProjectRoot}
-                    disabled={isSavingSettings || !projectRootInput.trim()}
-                    className="self-end bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSavingSettings ? 'Saving...' : 'Save Folder'}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={pickProjectRoot}
+                      disabled={isSavingSettings}
+                      className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSavingSettings ? 'Opening...' : 'Choose Folder'}
+                    </button>
+                    {projectRootInput.trim() && projectRootInput !== projectRoot && (
+                      <button
+                        onClick={saveProjectRoot}
+                        disabled={isSavingSettings || !projectRootInput.trim()}
+                        className="bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Save Typed Path
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="mt-3 text-xs text-slate-500">
                   {projectRoot ? `Current folder: ${projectRoot}` : 'No project folder configured yet.'}
@@ -888,6 +1077,43 @@ export default function Home() {
 
           <div className="grid gap-8">
 
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col gap-4">
+              <div>
+                <h3 className="font-semibold text-lg text-slate-900">0.0 Project</h3>
+                <p className="text-slate-500 text-sm mt-1">
+                  Create the project explicitly before drafting content, uploading images, or running generation steps.
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                  placeholder="Project name..."
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                />
+                <button
+                  onClick={createProject}
+                  disabled={!isStorageReady || !isLlmReady || Boolean(currentProjectId)}
+                  title={currentProjectId ? 'Project already created' : ''}
+                  className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {currentProjectId ? 'Project Ready' : 'Create Project'}
+                </button>
+              </div>
+
+              <div className="text-xs text-slate-500">
+                {currentProjectId ? `Project ID: ${currentProjectId}` : 'No project created yet.'}
+              </div>
+            </div>
+
+            <div className="flex justify-center -my-4 relative z-10">
+              <div className="bg-slate-200 rounded-full p-2">
+                <ArrowRight className="text-slate-400 w-5 h-5" />
+              </div>
+            </div>
+
             {/* STEP 0.1: CONTENT DRAFT */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col gap-4 relative overflow-hidden">
               <div className="absolute top-0 right-0 bg-gradient-to-bl from-blue-500 to-cyan-500 text-white text-[10px] px-3 py-1 font-bold rounded-bl-xl z-20 flex items-center gap-1">
@@ -910,7 +1136,7 @@ export default function Home() {
                 />
                 <button
                   onClick={generateDraft}
-                  disabled={!isStorageReady || !isLlmReady || isDraftLoading || !!(draftJson && !currentProjectId)} /* Allow generating if no draft or if project exists */
+                  disabled={!isStorageReady || !isLlmReady || isDraftLoading || !currentProjectId}
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2"
                 >
                   {isDraftLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit className="w-4 h-4" />}
@@ -918,7 +1144,7 @@ export default function Home() {
                 </button>
                 <button
                   onClick={saveDraftManual}
-                  disabled={!isStorageReady || !isLlmReady || !draftJson}
+                  disabled={!isStorageReady || !isLlmReady || !draftJson || !currentProjectId}
                   className="bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center gap-2"
                   title="Save current draft edits to project storage"
                 >
@@ -927,6 +1153,84 @@ export default function Home() {
               </div>
 
               {draftMessage && <span className="text-xs text-blue-600 font-medium">{draftMessage}</span>}
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-900">Project Images</h4>
+                    <p className="mt-1 text-xs text-slate-600">
+                      Upload local images into this project before drafting. The draft step will only arrange images from this library and should write the exact file name into each `visual.image_file_name`.
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                    Use semantic names like `factory-floor-team`, `customer-app-login`, or `regional-sales-map` so the content draft can place them reliably.
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-slate-600">Semantic file name</label>
+                      <input
+                        type="text"
+                        value={imageSemanticName}
+                        onChange={(e) => setImageSemanticName(e.target.value)}
+                        placeholder="factory-floor-team"
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-slate-600">Local image file</label>
+                      <input
+                        ref={imageInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/gif"
+                        onChange={(e) => setSelectedImageFile(e.target.files?.[0] || null)}
+                        className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-700"
+                      />
+                    </div>
+                    <button
+                      onClick={uploadProjectImage}
+                      disabled={!isStorageReady || !currentProjectId || isUploadingImage || !selectedImageFile || !imageSemanticName.trim()}
+                      title={!isStorageReady ? 'Save Project Folder first' : (!currentProjectId ? 'Create a project first' : (!selectedImageFile ? 'Choose an image file first' : (!imageSemanticName.trim() ? 'Enter a semantic file name first' : '')))}
+                      className="self-end rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isUploadingImage ? 'Uploading...' : 'Upload Image'}
+                    </button>
+                  </div>
+                  {!currentProjectId && (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                      Create the project first. Uploaded images belong to a specific project workspace.
+                    </div>
+                  )}
+                  {!isStorageReady && (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                      Upload is disabled until `Project Save Folder` is configured above, because images are stored inside each local project folder.
+                    </div>
+                  )}
+                  <div className="rounded-lg border border-slate-200 bg-white p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-xs font-semibold text-slate-700">Uploaded images</span>
+                      {isLoadingImages && <span className="text-[11px] text-slate-500">Loading...</span>}
+                    </div>
+                    {projectImages.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {projectImages.map((asset) => (
+                          <span key={asset.fileName} className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">
+                            <ImagePlus className="h-3 w-3" />
+                            {asset.fileName}
+                            {asset.orientation && asset.orientation !== 'unknown' ? ` · ${asset.orientation}` : ''}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-500">
+                        No project images yet. Upload images here if you want the draft to place real visuals by file name.
+                      </p>
+                    )}
+                  </div>
+                  {imageUploadMessage && (
+                    <span className="text-xs font-medium text-indigo-600">{imageUploadMessage}</span>
+                  )}
+                </div>
+              </div>
 
               <textarea
                 className="w-full h-40 border border-slate-200 rounded-lg p-3 text-xs font-mono bg-slate-50 focus:bg-white transition-colors text-slate-900"
@@ -963,7 +1267,7 @@ export default function Home() {
                   onClick={generateBrief}
                   disabled={!isStorageReady || !isLlmReady || isBriefLoading || !draftJson || !currentProjectId}
                   className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={!currentProjectId ? "Start a Draft first to create a project" : ""}
+                  title={!currentProjectId ? "Create a project first" : ""}
                 >
                   {isBriefLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                   Generate Visual DNA Brief
@@ -1153,13 +1457,38 @@ export default function Home() {
                   <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded">
                     Native Resolution: 1280 x 720
                   </span>
+                  {!previewFile.includes('components') && previewSequence.length > 1 && previewIndex >= 0 && (
+                    <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">
+                      {previewIndex + 1} / {previewSequence.length}
+                    </span>
+                  )}
                 </div>
-                <button
-                  onClick={() => setPreviewFile(null)}
-                  className="bg-white hover:bg-slate-100 text-slate-500 hover:text-red-500 px-3 py-1 rounded border border-slate-200 transition-colors text-sm font-medium"
-                >
-                  Close Preview (Esc)
-                </button>
+                <div className="flex items-center gap-2">
+                  {!previewFile.includes('components') && previewSequence.length > 1 && (
+                    <>
+                      <button
+                        onClick={goToPrevPreview}
+                        disabled={!canGoPrev}
+                        className="bg-white hover:bg-slate-100 text-slate-600 px-3 py-1 rounded border border-slate-200 transition-colors text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        Prev
+                      </button>
+                      <button
+                        onClick={goToNextPreview}
+                        disabled={!canGoNext}
+                        className="bg-white hover:bg-slate-100 text-slate-600 px-3 py-1 rounded border border-slate-200 transition-colors text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={closePreview}
+                    className="bg-white hover:bg-slate-100 text-slate-500 hover:text-red-500 px-3 py-1 rounded border border-slate-200 transition-colors text-sm font-medium"
+                  >
+                    Close Preview (Esc)
+                  </button>
+                </div>
               </div>
 
               <div className={`flex-1 bg-slate-200 ${previewFile.includes('components') ? 'overflow-hidden' : 'overflow-auto'} flex ${previewFile.includes('components') ? 'items-start' : 'items-center'} justify-center`}>

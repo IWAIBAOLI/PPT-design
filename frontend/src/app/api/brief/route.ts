@@ -5,6 +5,7 @@ import path from 'path';
 import { exec } from 'child_process';
 import util from 'util';
 import { requireLlmConfig } from '@/lib/server/local-settings';
+import { getProjectById } from '@/lib/server/project-store';
 
 const execPromise = util.promisify(exec);
 
@@ -18,6 +19,7 @@ const VENV_PYTHON = path.join(ROOT_DIR, 'venv', 'bin', 'python3');
 
 const DRAFT_PATH = path.join(ROOT_DIR, 'pipeline_input', 'content_draft.json');
 const DRAFT_SCRIPT = path.join(SKILLS_DIR, 'draft_content', 'scripts', 'draft_content.py');
+const DRAFT_IMAGE_ASSETS_PATH = path.join(ROOT_DIR, 'pipeline_input', 'draft_image_assets.json');
 
 async function getLlmEnv(modelOverride?: string): Promise<NodeJS.ProcessEnv> {
     const llm = await requireLlmConfig();
@@ -35,13 +37,16 @@ export async function POST(request: Request) {
         const body = await request.json();
 
         if (body.action === 'draft') {
-            const { prompt, model } = body;
+            const { prompt, model, imageAssets } = body;
             if (!prompt) return NextResponse.json({ success: false, error: 'Prompt is required' }, { status: 400 });
 
             // Ensure pipeline_input dir exists
             await fs.mkdir(path.dirname(DRAFT_PATH), { recursive: true });
 
-            const cmd = `"${VENV_PYTHON}" "${DRAFT_SCRIPT}" "${prompt.replace(/"/g, '\\"')}" "${DRAFT_PATH}"`;
+            const normalizedImageAssets = Array.isArray(imageAssets) ? imageAssets : [];
+            await fs.writeFile(DRAFT_IMAGE_ASSETS_PATH, JSON.stringify(normalizedImageAssets, null, 2), 'utf-8');
+
+            const cmd = `"${VENV_PYTHON}" "${DRAFT_SCRIPT}" "${prompt.replace(/"/g, '\\"')}" "${DRAFT_PATH}" "${DRAFT_IMAGE_ASSETS_PATH}"`;
             console.log(`Executing Draft: ${cmd}`);
 
             // Pass model via env if needed, though draft_content currently hardcodes or uses default
@@ -88,10 +93,20 @@ export async function POST(request: Request) {
     }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
-        const content = await fs.readFile(BRIEF_PATH, 'utf-8');
-        return NextResponse.json({ success: true, brief: JSON.parse(content) });
+        const { searchParams } = new URL(request.url);
+        const projectId = searchParams.get('projectId');
+
+        if (projectId) {
+            const project = await getProjectById(projectId);
+            return NextResponse.json({
+                success: true,
+                brief: project?.brief_json ?? null,
+            });
+        }
+
+        return NextResponse.json({ success: true, brief: null });
     } catch {
         return NextResponse.json({ success: true, brief: null });
     }

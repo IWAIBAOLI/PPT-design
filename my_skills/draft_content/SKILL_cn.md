@@ -27,9 +27,10 @@ python3 my_skills/draft_content/scripts/draft_content.py "2024产品路线图" "
 取代了通用的 block，每个项都有明确类型：
 *   **`statistic` (统计)**: 用于可识别的数据。包含 `data_payload`。
 *   **`text` (文本)**: 叙述性内容。使用 `body` 存储可见文本。
-*   **`visual` (视觉)**: 图片、照片意向。使用 `image_description` 存储生成提示词。
+*   **`visual` (视觉)**: 已上传本地图片意向。必须使用 `image_file_name` 指向项目内已有图片；若有图片元数据，还应保留 `image_width`、`image_height`、`image_aspect_ratio`、`image_orientation`；可用 `image_description` 说明版面使用方式。
 *   **`chart` (图表)**: 数据可视化。使用 `data_payload` 存储数据，`image_description` 存储视觉描述。
 *   **`sub_items` (子项)**: 递归数组，支持无限层级的“多层标题/多层内容”结构。
+*   **`content_role`**: 所有类型共用的版式角色（`primary`、`supporting`、`branding`、`evidence`、`atmosphere`、`navigation`），避免只有图片拥有细粒度规则。
 
 ### 2. 锚定视觉线索 (`visual_cues`)
 视觉指令直接挂载在它修饰的内容上。

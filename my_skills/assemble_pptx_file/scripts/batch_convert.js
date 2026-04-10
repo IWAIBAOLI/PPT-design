@@ -28,6 +28,14 @@ async function batchConvert(htmlDir, outputPath, filterFiles = null) {
                     const padded = filterItem.padStart(2, '0');
                     if (f.startsWith(`slide_${padded}_`) || f.startsWith(`slide_${padded}.`)) return true;
                 }
+
+                // Most robust case: match by slide ordinal only, regardless of trailing layout name.
+                // Example: "slide_02_agenda" should match "slide_02_grid_4_feature.html".
+                const slideNumMatch = String(filterItem).match(/^slide_(\d+)/);
+                if (slideNumMatch) {
+                    const padded = slideNumMatch[1].padStart(2, '0');
+                    if (f.startsWith(`slide_${padded}_`) || f.startsWith(`slide_${padded}.`)) return true;
+                }
             }
             return false;
         });

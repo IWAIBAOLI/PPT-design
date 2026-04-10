@@ -39,17 +39,20 @@ MOCK_CONTENT = {
             "content_items": [
                 {
                     "item_type": "statistic",
+                    "content_role": "primary",
                     "headline": "Revenue Impact",
                     "body": "Projected loss of $2M in Q3 due to shipment delays.",
                     "visual_cues": { "status": "critical" },
                     "sub_items": [
                         {
                             "item_type": "text",
+                            "content_role": "supporting",
                             "headline": "Region A",
                             "body": "North America impacted most heavily ($1.5M)."
                         },
                          {
                             "item_type": "text",
+                            "content_role": "supporting",
                             "headline": "Region B",
                             "body": "Europe showed resilience."
                         }
@@ -57,14 +60,17 @@ MOCK_CONTENT = {
                 },
                 {
                     "item_type": "text",
+                    "content_role": "supporting",
                     "headline": "Supply Chain",
                     "body": "Shipment delayed by 2 weeks.",
                     "visual_cues": { "status": "negative", "badge": "Urgent" }
                 },
-                 {
+                {
                     "item_type": "visual",
+                    "content_role": "evidence",
                     "headline": "Warehouse Status",
-                    "image_description": "Photo of empty warehouse shelves.",
+                    "image_file_name": "warehouse-empty-shelves.jpg",
+                    "image_description": "Use the uploaded warehouse photo as the main right-side visual.",
                     "visual_cues": { "style_hint": "Desaturated, gritty" }
                 }
             ]
@@ -76,7 +82,49 @@ def load_file(path):
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
-def generate_draft(user_request, output_path):
+def format_image_asset_context(image_assets):
+    if not image_assets:
+        return ""
+
+    lines = [
+        "Uploaded project images available for use:",
+    ]
+    for asset in image_assets:
+        if not isinstance(asset, dict):
+            continue
+        file_name = asset.get("fileName") or asset.get("file_name")
+        if not file_name:
+            continue
+        size = asset.get("size")
+        width = asset.get("width")
+        height = asset.get("height")
+        aspect_ratio = asset.get("aspectRatio") or asset.get("aspect_ratio")
+        orientation = asset.get("orientation")
+        line = f"- {file_name}"
+        if size:
+            line += f" ({size} bytes)"
+        if width and height:
+            line += f", {width}x{height}px"
+        if orientation:
+            line += f", {orientation}"
+        if aspect_ratio:
+            line += f", ratio {aspect_ratio}"
+        lines.append(line)
+
+    if len(lines) == 1:
+        return ""
+
+    lines.extend([
+        "",
+        "Use these image file names only for `visual` items.",
+        "Assign `content_role` to every item so layout can reason consistently across text, images, charts, and metrics.",
+        "When you choose a file for a visual item, preserve its width, height, aspect ratio, and orientation fields in that item.",
+        "If none of the uploaded files fit a slide, do not create a `visual` item for that slide.",
+    ])
+    return "\n".join(lines)
+
+
+def generate_draft(user_request, output_path, image_assets=None):
     print(f">> [Content Editor] Analyzing request: {user_request}")
 
     # Re-fetch env vars to ensure we catch what's passed by exec
@@ -108,9 +156,16 @@ def generate_draft(user_request, output_path):
                 print(f"Warning: Schema file not found at {schema_path}")
             schema = load_file(schema_path) if os.path.exists(schema_path) else "{}"
 
+            image_asset_context = format_image_asset_context(image_assets)
+
+            user_message = f"Request: {user_request}"
+            if image_asset_context:
+                user_message += f"\n\n{image_asset_context}"
+            user_message += "\n\nOutput the JSON draft now."
+
             messages = [
                 {"role": "system", "content": f"{system_prompt}\n\nCRITICAL: You MUST return ONLY a valid JSON object strictly complying with the schema below. Do not output any markdown blocks, explanations, or other text.\n\nSchema:\n{schema}"},
-                {"role": "user", "content": f"Request: {user_request}\n\nOutput the JSON draft now."}
+                {"role": "user", "content": user_message}
             ]
 
             print(">> [Content Editor] Calling LLM...")
@@ -165,7 +220,14 @@ def generate_draft(user_request, output_path):
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Usage: python3 draft_content.py <user_request> <output_json_path>")
+        print("Usage: python3 draft_content.py <user_request> <output_json_path> [image_assets_json_path]")
         sys.exit(1)
-    
-    generate_draft(sys.argv[1], sys.argv[2])
+
+    image_assets = None
+    if len(sys.argv) >= 4 and sys.argv[3]:
+        image_assets_path = sys.argv[3]
+        if os.path.exists(image_assets_path):
+            with open(image_assets_path, "r", encoding="utf-8") as f:
+                image_assets = json.load(f)
+
+    generate_draft(sys.argv[1], sys.argv[2], image_assets)

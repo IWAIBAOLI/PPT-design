@@ -38,11 +38,16 @@ const EMU_PER_IN = 914400;
 async function getBodyDimensions(page) {
   const bodyDimensions = await page.evaluate(() => {
     const body = document.body;
-    const style = window.getComputedStyle(body);
+    const masterLayout =
+      document.querySelector('.ppt-master-layout') ||
+      document.querySelector('[class*="master"]') ||
+      body;
+    const style = window.getComputedStyle(masterLayout);
+    const rect = masterLayout.getBoundingClientRect();
 
     return {
-      width: parseFloat(style.width),
-      height: parseFloat(style.height),
+      width: rect.width || parseFloat(style.width),
+      height: rect.height || parseFloat(style.height),
       scrollWidth: body.scrollWidth,
       scrollHeight: body.scrollHeight
     };

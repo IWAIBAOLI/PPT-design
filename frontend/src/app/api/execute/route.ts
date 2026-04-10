@@ -349,6 +349,80 @@ export async function POST(request: Request) {
             cmdToRun = `"${ASSEMBLER_VENV}" "${QC_SCRIPT}" "${projectFinalOutput}" "${projectBriefPath}"`;
         }
 
+        if (step === 'metrics') {
+            const htmlDirExists = await fs.stat(projectHtmlDir).catch(() => false);
+            if (!htmlDirExists) {
+                return NextResponse.json(
+                    { success: false, error: 'No layout HTML found. Run Layout Architect first.' },
+                    { status: 400 }
+                );
+            }
+
+            const htmlFiles = (await fs.readdir(projectHtmlDir))
+                .filter((file) => file.endsWith('.html') && file !== 'index.html')
+                .sort();
+
+            if (htmlFiles.length === 0) {
+                return NextResponse.json(
+                    { success: false, error: 'No slide HTML files found for linting.' },
+                    { status: 400 }
+                );
+            }
+
+            const outputs: string[] = [];
+            const failedFiles: string[] = [];
+
+            for (const fileName of htmlFiles) {
+                const htmlPath = path.join(projectHtmlDir, fileName);
+                outputs.push(`\n=== Linting ${fileName} ===\n`);
+                try {
+                    const lintOutput = await runCommand(`"${ASSEMBLER_VENV}" "${LINT_SCRIPT}" "${htmlPath}"`, currentEnv);
+                    outputs.push(lintOutput);
+                } catch (error: any) {
+                    failedFiles.push(fileName);
+                    outputs.push(error.message || String(error));
+                }
+            }
+
+            const outputText = outputs.join('\n').trim();
+            const success = failedFiles.length === 0;
+
+            if (projectId) {
+                await insertPipelineResult({
+                    project_id: projectId,
+                    step_name: step,
+                    status: success ? 'success' : 'error',
+                    message: success
+                        ? `Lint passed for ${htmlFiles.length} slide(s).`
+                        : `Lint failed for ${failedFiles.length} slide(s).`,
+                    output: {
+                        checked: htmlFiles,
+                        failed: failedFiles,
+                        log: outputText,
+                    },
+                });
+            }
+
+            if (!success) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: `Lint failed for: ${failedFiles.join(', ')}`,
+                        output: outputText,
+                        storageMode: getStorageMode(),
+                    },
+                    { status: 400 }
+                );
+            }
+
+            return NextResponse.json({
+                success: true,
+                message: `Lint passed for ${htmlFiles.length} slide(s).`,
+                output: outputText,
+                storageMode: getStorageMode(),
+            });
+        }
+
         // --- EXECUTION BLOCK ---
         if (cmdToRun) {
             // Capture start time for versioning granularity (only archive files modified after this)
@@ -373,10 +447,6 @@ export async function POST(request: Request) {
                 await syncCallback();
                 return NextResponse.json({ success: true, message: 'Command success', output, storageMode: getStorageMode() });
             }
-        }
-
-        if (step === 'metrics' && !useStream) {
-            return NextResponse.json({ success: true, message: 'Metrics not supported via this API yet.', storageMode: getStorageMode() });
         }
 
         return NextResponse.json({ success: false, error: 'Step not handled' }, { status: 400 });

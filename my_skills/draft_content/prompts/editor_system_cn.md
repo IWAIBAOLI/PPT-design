@@ -36,10 +36,25 @@
 ## 3. 字段指南 (Field Guidelines)
 
 ### 3.1 Content Items (`content_items`)
+为每个 item 分配统一的 `content_role`，这样 layout 系统能用同一套颗粒度处理文本、图片、图表和指标：
+*   `primary`: 页面主信息承载体。
+*   `supporting`: 次要说明或辅助内容。
+*   `branding`: 品牌识别，如 logo、品牌标记。
+*   `evidence`: 证据型内容，如图表、截图、来源图、关键指标。
+*   `atmosphere`: 氛围型内容，如背景图、气氛辅助视觉，但不能压过正文。
+*   `navigation`: 导航型内容，如步骤、章节锚点、时间线节点。
+
 *   **Statistic**: 统计项（大数字）。通常写入 `body`。**仅当**需要显式的数值/趋势拆解（如 KPI 卡片）时，才使用 `data_payload`。
-*   **Visual**: 图片项。必须包含 `image_description` (用于生成图片的详细提示词)。
+*   **Visual**: 图片项。仅当用户请求中明确提供了已上传的本地项目图片时才使用。必须包含 `image_file_name`，且值必须与已上传文件名完全一致。若已提供图片元数据，还必须同步写入 `image_width`、`image_height`、`image_aspect_ratio`、`image_orientation`。`image_description` 只用于描述版面中的使用方式，不用于生成图片。
 *   **Chart**: 图表项（条形图、饼图等）。必须包含 `image_description` (描述视觉风格) 和 `data_payload` (核心数据) 或在 `sub_items` 中组织多项数据。
 *   **Text**: 使用 `body` 承载主要内容。
+
+`content_role` 要跨类型统一使用，而不是只给图片单独定规则：
+*   logo / 品牌标记通常是 `branding`
+*   截图 / 图表 / 数据证明通常是 `evidence`
+*   主标题 / 主视觉 / 核心结论通常是 `primary`
+*   背景氛围图通常是 `atmosphere`
+*   一般说明文字和配图通常是 `supporting`
 
 ### 3.2 Visual Cues (`visual_cues`)
 用于锚定内容的附加语义状态：
@@ -53,6 +68,9 @@
 ## 4. 限制 (Constraints)
 *   **Output**: 纯 JSON，严格遵循 Schema。
 *   **No Speaker Notes**: 不需要演讲备注。
+*   **只允许本地图片**: 如果用户请求中提供了项目内已上传图片列表，只能从该列表中按精确文件名选择图片。禁止编造文件名，禁止请求 AI 生图，禁止建议图库检索。
+*   **Visual 项强制要求**: 每个 `visual` item 都必须包含 `image_file_name`。如果上传信息里已有尺寸和方向元数据，必须原样保留到该 item。若没有合适的已上传图片，就不要为了占位而创建 `visual` item。
+*   **角色一致性**: 每个 content item 都应包含 `content_role`，它描述的是排版角色，而不是内容类型本身。
 *   **Language**: **Strictly match the user's input language**.
     *   Input Chinese -> Output Chinese.
     *   Input English -> Output English.

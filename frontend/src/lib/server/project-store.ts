@@ -83,6 +83,28 @@ export async function getGeneratedProjectsDir() {
   return requireProjectRoot();
 }
 
+async function syncLocalProjectInputs(project: ProjectRecord) {
+  const generatedProjectsDir = await getGeneratedProjectsDir();
+  const inputDir = path.join(generatedProjectsDir, project.id, 'input');
+  await fs.mkdir(inputDir, { recursive: true });
+
+  if (project.brief_json !== undefined) {
+    await fs.writeFile(
+      path.join(inputDir, 'brief.json'),
+      JSON.stringify(project.brief_json ?? {}, null, 2),
+      'utf-8'
+    );
+  }
+
+  if (project.content_draft !== undefined) {
+    await fs.writeFile(
+      path.join(inputDir, 'draft.json'),
+      JSON.stringify(project.content_draft ?? null, null, 2),
+      'utf-8'
+    );
+  }
+}
+
 async function readLocalStore(): Promise<LocalStoreData> {
   await ensureLocalStore();
   const localStorePath = await getLocalStorePath();
@@ -205,6 +227,7 @@ export async function upsertProject(input: Partial<ProjectRecord> & { project_na
     };
 
     await writeLocalStore(store);
+    await syncLocalProjectInputs(store.projects[index]);
     return store.projects[index];
   }
 
@@ -222,6 +245,7 @@ export async function upsertProject(input: Partial<ProjectRecord> & { project_na
 
   store.projects.push(project);
   await writeLocalStore(store);
+  await syncLocalProjectInputs(project);
   return project;
 }
 
@@ -265,6 +289,7 @@ export async function patchProject(id: string, updates: Partial<ProjectRecord>) 
     updated_at: nowIso(),
   };
   await writeLocalStore(store);
+  await syncLocalProjectInputs(store.projects[index]);
   return store.projects[index];
 }
 

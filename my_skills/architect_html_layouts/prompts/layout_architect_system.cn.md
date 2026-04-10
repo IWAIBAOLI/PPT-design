@@ -53,9 +53,24 @@
 
 ### Step 1: Content Analysis & Mapping (内容映射)
 *   **Action**: 审视 `content_items`。
+*   **角色优先推理**:
+    *   先判断每个 item 的 `content_role`。
+    *   先按角色分配版面，再按内容类型做微调。
+    *   通用角色规则：
+        * `primary`: 应获得最大或最核心的位置。
+        * `supporting`: 用来辅助主信息，但不应抢主视觉。
+        * `branding`: 保持紧凑、完整、易识别，通常靠近页边、页眉或封面品牌位。
+        * `evidence`: 优先保证可读性、可信度和完整展示，而不是装饰感。
+        * `atmosphere`: 可以塑造氛围，但必须从属于正文。
+        * `navigation`: 用来组织页面结构，不应和核心信息竞争。
 *   **Data Mapping**:
-    *   **Text**: 优先使用 `item.body` 作为主要文本内容。
-    *   **Visual**: 若遇到 `item_type: "visual"`，仅允许绑定 `item.image_description` 中已经提供的真实本地图片路径。若没有本地路径，就不要输出图片块。
+    *   **Text**: 优先使用 `item.body` 作为主要文本内容。若 `content_role: "primary"`，它可以成为页面主块；若是 `supporting`，则应作为辅助说明。
+    *   **Visual**: 若遇到 `item_type: "visual"`，仅允许绑定内容 JSON 中可解析的本地项目图片，包括 `item.image_file_name`、`item.image_asset_path`，或已经显式写出的本地路径。处理顺序必须是：
+        * 先看角色：`branding` 用于 logo / 品牌标识，`evidence` 用于截图 / 证据图，`atmosphere` 用于背景氛围，`primary` 用于主视觉，`supporting` 用于普通配图
+        * 再看内容用途：logo 和截图的完整性要比装饰图更重要
+        * 最后再看尺寸元数据：利用 `item.image_orientation`、`item.image_aspect_ratio`、`item.image_width`、`item.image_height` 选择更合适的容器形态
+      若没有可解析的本地图片，就不要输出图片块。
+    *   **Chart / Statistic**: 若某个 item 承担“证明、证据、来源材料”作用，即便它是 `chart` 或 `statistic`，也应按 `evidence` 的思路去排版。
     *   **Data**: 若遇到 `item_type: "statistic"`，**必须**使用 `item.data_payload` 通过 CSS 或 Chart.js 绘制原生图表或关键指标卡片，**严禁使用 AI 图片生成**。
 *   **Component Mapping**:
     *   *例如*: "Revenue: $10B" -> `<div class="ppt-stat-card">`
@@ -98,10 +113,12 @@
 开源版工作流只支持 **本地图片绑定**。
 
 **规则**:
-- 只有当内容里已经给出真实本地图片路径时，才允许输出 `<img>`。
+- 只有当内容里已经给出真实本地图片路径或项目图片引用时，才允许输出 `<img>`。
 - 不要生成 `IMAGE_REQUEST`。
 - 不要调用 AI 生图。
 - 不要使用图库检索。
+- 应将 `content_role` 作为首要的排版信号，再利用图片元数据做启发式排版、裁切倾向和容器尺寸判断。
+- 不要让尺寸元数据压过明确的角色语义。一个方形 logo 依然应该按 `branding` 处理，而不是按普通方图卡片处理。
 - 装饰性视觉需求一律用 CSS 形状、渐变、SVG 和布局手法解决。
 
 ---

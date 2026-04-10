@@ -20,13 +20,55 @@
                     "type": "string",
                     "description": "Primary text or title of this item."
                 },
+                "content_role": {
+                    "type": "string",
+                    "enum": [
+                        "primary",
+                        "supporting",
+                        "branding",
+                        "evidence",
+                        "atmosphere",
+                        "navigation"
+                    ],
+                    "description": "The layout role this item should play on the slide. Use this to align images, text, charts, and stats under one shared placement logic."
+                },
                 "body": {
                     "type": "string",
                     "description": "The visible body text."
                 },
                 "image_description": {
                     "type": "string",
-                    "description": "Prompt for generating image (visual items) or description/style of the chart (chart items). NOT displayed."
+                    "description": "For 'visual' items, describe how the uploaded local image should be used on the slide. For 'chart' items, describe the intended visual style. NOT displayed."
+                },
+                "image_file_name": {
+                    "type": "string",
+                    "description": "For 'visual' items, the exact uploaded local image file name from the project image library, such as 'factory-floor-team.jpg'."
+                },
+                "image_asset_path": {
+                    "type": "string",
+                    "description": "Optional local project image path for a visual item, typically 'input/images/<file-name>'."
+                },
+                "image_width": {
+                    "type": "number",
+                    "description": "Width of the uploaded local image in pixels."
+                },
+                "image_height": {
+                    "type": "number",
+                    "description": "Height of the uploaded local image in pixels."
+                },
+                "image_aspect_ratio": {
+                    "type": "number",
+                    "description": "Width divided by height for the uploaded local image."
+                },
+                "image_orientation": {
+                    "type": "string",
+                    "enum": [
+                        "landscape",
+                        "portrait",
+                        "square",
+                        "unknown"
+                    ],
+                    "description": "Orientation hint derived from the uploaded image dimensions."
                 },
                 "data_payload": {
                     "type": "object",

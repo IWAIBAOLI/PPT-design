@@ -36,10 +36,25 @@ Use `sub_items` freely to represent nested content hierarchies. Do not sacrifice
 ## 3. Field Guidelines
 
 ### 3.1 Content Items (`content_items`)
+Assign every item a `content_role` so the layout system can place all item types with the same semantic granularity:
+*   `primary`: The main message carrier on the slide.
+*   `supporting`: Secondary explanation or accompaniment.
+*   `branding`: Brand identity, logo, signature marks.
+*   `evidence`: Proof-oriented content such as charts, screenshots, source visuals, or key metrics.
+*   `atmosphere`: Background or mood-building support that should not overpower the main content.
+*   `navigation`: Structural guidance such as steps, section markers, or timeline anchors.
+
 *   **Statistic**: Metric items (Big Numbers). Usually put in `body`. Use `data_payload` **ONLY** for explicit value/trend breakdown (e.g., KPI cards).
-*   **Visual**: Image items. Must include `image_description` (detailed prompt for generation).
+*   **Visual**: Image items. Use these only when the request includes an uploaded local project image. They must include `image_file_name` with the exact uploaded file name. When metadata is provided, also copy `image_width`, `image_height`, `image_aspect_ratio`, and `image_orientation` from the uploaded asset info. `image_description` should describe placement/usage only, not generation.
 *   **Chart**: Data visualizations (Bar, Pie, etc.). Must include `image_description` (describing style) and `data_payload` (core data) or use `sub_items` for series data.
 *   **Text**: Use `body` for the main content payload.
+
+Use `content_role` consistently across all item types instead of creating image-only placement logic:
+*   Logos and brand marks usually map to `branding`.
+*   Screenshots, charts, data visuals, and proof assets usually map to `evidence`.
+*   Hero headlines, hero visuals, and key conclusions usually map to `primary`.
+*   Background visuals or mood-only imagery usually map to `atmosphere`.
+*   Ordinary explanatory text or accompanying visuals usually map to `supporting`.
 
 ### 3.2 Visual Cues (`visual_cues`)
 To anchor semantic status:
@@ -53,6 +68,9 @@ To anchor semantic status:
 ## 4. Constraints
 *   **Output**: Strict JSON matching the Schema.
 *   **No Speaker Notes**: Do not generate speaker notes.
+*   **Local Images Only**: If uploaded project images are provided in the user request, you may assign them to `visual` items by exact file name. Do not invent file names, do not request AI generation, and do not describe stock-photo retrieval.
+*   **Visual Item Requirement**: Every `visual` item must include `image_file_name`. If uploaded metadata is available, preserve the exact width, height, aspect ratio, and orientation fields for the chosen file. If no suitable uploaded image exists, do not create a `visual` item just to suggest an image.
+*   **Role Consistency**: Every content item should include `content_role`, and the role should describe layout importance rather than content type.
 *   **Language**: **Strictly match the user's input language**.
     *   Input Chinese -> Output Chinese.
     *   Input English -> Output English.

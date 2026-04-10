@@ -1,5 +1,5 @@
 import { FileText, Eye, ChevronDown, ChevronRight, RefreshCw, Monitor, Download } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 interface GeneratedFile {
     id: string;
@@ -16,7 +16,7 @@ interface StepArtifactsViewerProps {
     projectId: string;
     stepKey: string;
     refreshTrigger?: number;
-    onPreview: (fileName: string) => void;
+    onPreview: (fileName: string, orderedFiles: string[]) => void;
 }
 
 export default function StepArtifactsViewer({ projectId, stepKey, refreshTrigger, onPreview }: StepArtifactsViewerProps) {
@@ -24,34 +24,6 @@ export default function StepArtifactsViewer({ projectId, stepKey, refreshTrigger
     const [groupedFiles, setGroupedFiles] = useState<Record<string, GeneratedFile[]>>({});
     const [loading, setLoading] = useState(false);
     const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set());
-
-    const fetchFiles = async () => {
-        setLoading(true);
-        try {
-            const pathPrefix = `${projectId}/${stepKey}/`;
-            const res = await fetch(`/api/projects/${projectId}`);
-            const payload = await res.json();
-
-            if (!payload.success) {
-                console.error(`Error fetching artifacts for ${stepKey}:`, payload.error);
-            } else {
-                const data = (payload.project?.generated_files || []).filter((file: GeneratedFile) =>
-                    file.storage_path.startsWith(pathPrefix)
-                );
-                setFiles(data);
-                groupFiles(data);
-            }
-        } catch (error) {
-            console.error(`Error fetching artifacts for ${stepKey}:`, error);
-        }
-        setLoading(false);
-    };
-
-    useEffect(() => {
-        if (projectId && stepKey) {
-            fetchFiles();
-        }
-    }, [projectId, stepKey, refreshTrigger]);
 
     const groupFiles = (fileList: GeneratedFile[]) => {
         const groups: Record<string, GeneratedFile[]> = {};
@@ -64,6 +36,37 @@ export default function StepArtifactsViewer({ projectId, stepKey, refreshTrigger
         setGroupedFiles(groups);
     };
 
+    const fetchFiles = useCallback(async () => {
+        setLoading(true);
+        try {
+            const pathPrefix = `${projectId}/${stepKey}/`;
+            const res = await fetch(`/api/projects/${projectId}`);
+            const payload = await res.json();
+
+            if (!payload.success) {
+                console.error(`Error fetching artifacts for ${stepKey}:`, payload.error);
+            } else {
+                const data = (payload.project?.generated_files || []).filter((file: GeneratedFile) =>
+                    file.storage_path.startsWith(pathPrefix)
+                ).filter((file: GeneratedFile) => file.file_name !== 'index.html');
+                setFiles(data);
+                groupFiles(data);
+            }
+        } catch (error) {
+            console.error(`Error fetching artifacts for ${stepKey}:`, error);
+        }
+        setLoading(false);
+    }, [projectId, stepKey]);
+
+    useEffect(() => {
+        if (projectId && stepKey) {
+            const timer = window.setTimeout(() => {
+                void fetchFiles();
+            }, 0);
+            return () => window.clearTimeout(timer);
+        }
+    }, [projectId, stepKey, refreshTrigger, fetchFiles]);
+
     const toggleExpand = (fileName: string) => {
         const newSet = new Set(expandedFiles);
         if (newSet.has(fileName)) {
@@ -73,6 +76,10 @@ export default function StepArtifactsViewer({ projectId, stepKey, refreshTrigger
         }
         setExpandedFiles(newSet);
     };
+
+    const orderedHtmlFiles = Object.keys(groupedFiles)
+        .filter((fileName) => fileName.endsWith('.html'))
+        .sort();
 
     if (loading && files.length === 0) {
         return <div className="text-xs text-slate-500 animate-pulse mt-2">Loading artifacts...</div>;
@@ -115,7 +122,7 @@ export default function StepArtifactsViewer({ projectId, stepKey, refreshTrigger
                                         <div className="flex items-center gap-2">
                                             <span
                                                 className="text-xs text-slate-700 font-medium truncate cursor-pointer hover:text-indigo-600"
-                                                onClick={() => isHtml ? onPreview(latest.file_name) : window.open(`/api/preview?file=${latest.file_name}&projectId=${projectId}&download=true`, '_blank')}
+                                                onClick={() => isHtml ? onPreview(latest.file_name, orderedHtmlFiles) : window.open(`/api/preview?file=${latest.file_name}&projectId=${projectId}&download=true`, '_blank')}
                                                 title={fileName}
                                             >
                                                 {fileName}
@@ -132,7 +139,7 @@ export default function StepArtifactsViewer({ projectId, stepKey, refreshTrigger
 
                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
-                                        onClick={() => isHtml ? onPreview(latest.file_name) : window.open(`/api/preview?file=${latest.file_name}&projectId=${projectId}&download=true`, '_blank')}
+                                        onClick={() => isHtml ? onPreview(latest.file_name, orderedHtmlFiles) : window.open(`/api/preview?file=${latest.file_name}&projectId=${projectId}&download=true`, '_blank')}
                                         className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-indigo-600 transition-colors"
                                         title={isHtml ? "Preview" : "Download"}
                                     >

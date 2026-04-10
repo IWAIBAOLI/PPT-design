@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
-import mime from 'mime'; // You might need to install 'mime' or just hardcode text/html
+import mime from 'mime';
 import { getGeneratedProjectsDir } from '@/lib/server/project-store';
 
 const ROOT_DIR = path.resolve(process.cwd(), '..');
@@ -18,17 +18,18 @@ export async function GET(request: Request) {
         return new NextResponse('File not specified', { status: 400 });
     }
 
-    // Security check: prevent directory traversal
-    const cleanFileName = path.basename(fileName);
+    const normalizedRelativePath = path.posix.normalize(fileName.replace(/\\/g, '/'));
+    if (normalizedRelativePath.startsWith('..') || path.isAbsolute(normalizedRelativePath)) {
+        return new NextResponse('Invalid file path', { status: 400 });
+    }
+
     let filePath = '';
 
     // 1. Try Project Archive First (if ID provided)
     if (projectId) {
         const archiveDir = await getGeneratedProjectsDir();
-        // Try layout folder first
-        const layoutPath = path.join(archiveDir, projectId, 'layout', cleanFileName);
-        // Try assets folder second (for components_preview.html)
-        const assetPath = path.join(archiveDir, projectId, 'assets', cleanFileName);
+        const layoutPath = path.join(archiveDir, projectId, 'layout', normalizedRelativePath);
+        const assetPath = path.join(archiveDir, projectId, 'assets', normalizedRelativePath);
 
         try {
             await fs.access(layoutPath);
@@ -45,8 +46,8 @@ export async function GET(request: Request) {
 
     // 2. Fallback to Ephemeral Work Dir (Current Project)
     if (!filePath) {
-        const workPath = path.join(HTML_DIR, cleanFileName);
-        const assetPath = path.join(WORK_DIR, cleanFileName);
+        const workPath = path.join(HTML_DIR, normalizedRelativePath);
+        const assetPath = path.join(WORK_DIR, normalizedRelativePath);
 
         try {
             await fs.access(workPath);
@@ -57,14 +58,53 @@ export async function GET(request: Request) {
     }
 
     try {
+        const detectedContentType = mime.getType(filePath) || 'application/octet-stream';
+
+        if (detectedContentType === 'text/html') {
+            let html = await fs.readFile(filePath, 'utf-8');
+            const currentDir = path.posix.dirname(normalizedRelativePath);
+
+            html = html.replace(
+                /\b(src|href)=["']([^"']+)["']/gi,
+                (_match, attr, rawValue) => {
+                    const value = String(rawValue);
+                    if (
+                        value.startsWith('http://')
+                        || value.startsWith('https://')
+                        || value.startsWith('data:')
+                        || value.startsWith('blob:')
+                        || value.startsWith('#')
+                        || value.startsWith('/')
+                    ) {
+                        return `${attr}="${value}"`;
+                    }
+
+                    const resolvedPath = path.posix.normalize(
+                        currentDir && currentDir !== '.'
+                            ? path.posix.join(currentDir, value)
+                            : value
+                    );
+
+                    if (resolvedPath.startsWith('..')) {
+                        return `${attr}="${value}"`;
+                    }
+
+                    const previewUrl = `/api/preview?file=${encodeURIComponent(resolvedPath)}${projectId ? `&projectId=${encodeURIComponent(projectId)}` : ''}`;
+                    return `${attr}="${previewUrl}"`;
+                }
+            );
+
+            return new NextResponse(html, {
+                headers: {
+                    'Content-Type': 'text/html; charset=utf-8',
+                },
+            });
+        }
+
         const fileBuffer = await fs.readFile(filePath);
-
-        // Determine content type (default to text/html for our use case)
-        const contentType = 'text/html';
-
         return new NextResponse(fileBuffer, {
             headers: {
-                'Content-Type': contentType,
+                'Content-Type': detectedContentType,
             },
         });
     } catch (error) {

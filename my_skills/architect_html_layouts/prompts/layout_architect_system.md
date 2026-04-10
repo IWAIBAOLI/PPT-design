@@ -51,9 +51,24 @@ Beauty lies not just in valid code, but in **pleasing order**.
 
 ### Step 1: Content Analysis & Mapping
 *   **Action**: Review `content_items`.
+*   **Role-First Reasoning**:
+    *   First determine each item's `content_role`.
+    *   Place by role before you fine-tune by content type.
+    *   Shared role guidance:
+        * `primary`: deserves the largest or most central placement.
+        * `supporting`: should reinforce the primary content without dominating.
+        * `branding`: keep compact, recognizable, and usually near edges, headers, or cover lockups.
+        * `evidence`: prioritize readability, trust, and completeness over decoration.
+        * `atmosphere`: may shape the background mood, but must stay visually subordinate.
+        * `navigation`: should structure the page clearly without competing with the core message.
 *   **Data Mapping**:
-    *   **Text**: Prioritize using `item.body` as the main text source.
-    *   **Visual**: If `item_type: "visual"`, only bind a real local image path already present in `item.image_description`. If no local image path is provided, render the slide without an image block.
+    *   **Text**: Prioritize using `item.body` as the main text source. A text item with `content_role: "primary"` may become the hero block; with `supporting`, it should act as reinforcement.
+    *   **Visual**: If `item_type: "visual"`, only bind an uploaded local project image referenced by `item.image_file_name`, `item.image_asset_path`, or an explicit local path already present in the content JSON. Decide usage in this order:
+        * role first: `branding` for logos, `evidence` for screenshots/source visuals, `atmosphere` for background-like imagery, `primary` for hero visuals, `supporting` for regular accompaniment
+        * type intent next: preserve logos and screenshots more conservatively than decorative imagery
+        * size metadata last: use `item.image_orientation`, `item.image_aspect_ratio`, `item.image_width`, and `item.image_height` to choose a suitable container shape
+      If no resolvable local image is provided, render the slide without an image block.
+    *   **Chart / Statistic**: If an item functions as proof, metric, or source material, treat it like `evidence` even if its item type is `chart` or `statistic`.
     *   **Data**: If `item_type: "statistic"`, you **MUST** use `item.data_payload` to generate native charts or metric cards via **CSS or Chart.js**. **AI image generation for data is STRICTLY FORBIDDEN.**
 *   **Component Mapping**:
     *   *Ex*: "Revenue: $10B" -> `<div class="ppt-stat-card">`
@@ -98,10 +113,12 @@ During `<Thinking>`, you MUST answer:
 The open-source workflow is **local-image only**.
 
 **Rules**:
-- Use an `<img>` tag only when the content already provides a real local file path.
+- Use an `<img>` tag only when the content already provides a real local file path or project image reference.
 - Do not generate `IMAGE_REQUEST`.
 - Do not call AI image generation.
 - Do not use stock-image search.
+- Use `content_role` as the primary placement signal, then use image metadata heuristically for placement, cropping preference, and container sizing.
+- Do not let image metadata overrule obvious role semantics. A square logo is still `branding`, not a generic square card image.
 - For decorative needs, use CSS shapes, gradients, SVGs, and layout techniques instead of photos.
 
 ---

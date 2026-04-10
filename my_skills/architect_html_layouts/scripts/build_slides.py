@@ -6,6 +6,7 @@ import argparse
 import re
 import shutil
 from pathlib import Path
+from typing import Optional
 
 # --- Configuration ---
 MAX_RETRIES = 2
@@ -170,19 +171,71 @@ def strip_code_blocks(content: str) -> str:
     return content.strip()
 
 
-def extract_local_image_paths(slide: dict) -> list[str]:
+def _iter_image_reference_candidates(item: dict) -> list[str]:
+    candidates = []
+
+    for key in ("image_asset_path", "image_file_name"):
+        value = item.get(key)
+        if isinstance(value, str) and value.strip():
+            candidates.append(value.strip())
+
+    desc = item.get("image_description", "")
+    if isinstance(desc, str) and desc.strip():
+        absolute_matches = re.findall(
+            r'((?:/[^\s`"\']+|[A-Za-z]:\\[^\s`"\']+)\.(?:png|jpg|jpeg|webp|gif))',
+            desc,
+            flags=re.IGNORECASE,
+        )
+        file_matches = re.findall(
+            r'([A-Za-z0-9][A-Za-z0-9._-]*\.(?:png|jpg|jpeg|webp|gif))',
+            desc,
+            flags=re.IGNORECASE,
+        )
+        candidates.extend(absolute_matches)
+        candidates.extend(file_matches)
+
+    return candidates
+
+
+def _resolve_image_reference(reference: str, content_path: Optional[str]) -> Optional[str]:
+    ref = reference.strip().strip('"').strip("'")
+    if not ref:
+        return None
+
+    path_candidate = Path(ref)
+    if path_candidate.is_absolute() and path_candidate.exists():
+        return str(path_candidate)
+
+    project_input_dir = Path(content_path).resolve().parent if content_path else None
+    project_root = project_input_dir.parent if project_input_dir else None
+    candidate_paths = []
+
+    if project_input_dir:
+        candidate_paths.append(project_input_dir / ref)
+        candidate_paths.append(project_input_dir / "images" / Path(ref).name)
+
+    if project_root:
+        candidate_paths.append(project_root / ref)
+
+    for candidate in candidate_paths:
+        if candidate.exists():
+            return str(candidate)
+
+    return None
+
+
+def extract_local_image_paths(slide: dict, content_path: Optional[str] = None) -> list[str]:
     """
-    Extract absolute local image paths embedded in visual item descriptions.
+    Extract resolvable local image paths from visual items.
     """
     paths = []
-    pattern = r'(/Volumes/[^`\s；;]+?\.(?:png|jpg|jpeg|webp))'
     for item in slide.get("content_items", []):
         if item.get("item_type") != "visual":
             continue
-        desc = item.get("image_description", "")
-        for match in re.findall(pattern, desc, flags=re.IGNORECASE):
-            if os.path.exists(match):
-                paths.append(match)
+        for reference in _iter_image_reference_candidates(item):
+            resolved = _resolve_image_reference(reference, content_path)
+            if resolved and resolved not in paths:
+                paths.append(resolved)
     return paths
 
 
@@ -503,8 +556,8 @@ def process_brief(brief_path: str, output_dir: str, dna_dir: str, content_path: 
         IMPORTANT IMAGE RULES:
         - Do NOT use Pixabay.
         - Do NOT use AI image generation.
-        - Only use local image paths already present in the Content JSON.
-        - If the Content JSON does not provide a real local image path, do not create an <img> tag and do not emit IMAGE_REQUEST.
+        - Only use uploaded local project images already referenced in the Content JSON by file name, asset path, or explicit local path.
+        - If the Content JSON does not provide a resolvable local image reference, do not create an <img> tag and do not emit IMAGE_REQUEST.
 
         Generate the HTML structure for this slide using the components above.
         """
@@ -540,7 +593,7 @@ def process_brief(brief_path: str, output_dir: str, dna_dir: str, content_path: 
         clean_html = strip_code_blocks(raw_html)
         
         # --- LOCAL IMAGE BINDING ---
-        local_image_paths = extract_local_image_paths(slide)
+        local_image_paths = extract_local_image_paths(slide, content_path)
 
         if local_image_paths:
             copied_paths = copy_local_images(local_image_paths, slide_id, Path(output_dir))
@@ -629,9 +682,15 @@ def process_brief(brief_path: str, output_dir: str, dna_dir: str, content_path: 
         print(f"   -> Saved to {out_path}")
         print(f"Generated: {filename}")
 
-    # Generate Index
+    # Generate Index from all existing slide HTML files in the output directory,
+    # so partial regenerations do not overwrite the full slide listing.
+    all_slide_refs = sorted(
+        p.name for p in Path(output_dir).glob("slide_*.html")
+        if p.is_file()
+    )
+
     index_html = "<h1>Presentation Preview</h1><ul>"
-    for ref in html_indices:
+    for ref in all_slide_refs:
         index_html += f'<li><a href="{ref}">{ref}</a></li>'
     index_html += "</ul>"
     with open(Path(output_dir)/"index.html", 'w') as f:

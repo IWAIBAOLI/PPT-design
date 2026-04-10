@@ -27,9 +27,10 @@ The `content_draft.json` uses a **Semantic Item** model:
 Instead of generic blocks, items are typed:
 *   **`statistic`**: For recognizable data. Includes `data_payload` ({ value, trend }).
 *   **`text`**: Narrative content. Uses `body` for visible text.
-*   **`visual`**: Image/Photo intent. Uses `image_description` for generation prompts.
+*   **`visual`**: Uploaded local image intent. Must use `image_file_name` to point to an existing project image, should preserve image metadata (`image_width`, `image_height`, `image_aspect_ratio`, `image_orientation`) when available, and may use `image_description` for placement notes.
 *   **`chart`**: Data visualization. Uses `data_payload` for data, `image_description` for style description.
 *   **`sub_items`**: Recursive array for nested content hierarchies (sections, subsections).
+*   **`content_role`**: Shared layout role across all item types (`primary`, `supporting`, `branding`, `evidence`, `atmosphere`, `navigation`) so layout logic stays consistent beyond images alone.
 
 ### 2. Anchored Visual Cues (`visual_cues`)
 Visual directives are attached directly to the content they modify.

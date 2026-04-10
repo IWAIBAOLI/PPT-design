@@ -169,101 +169,6 @@ def strip_code_blocks(content: str) -> str:
     content = re.sub(r"```", "", content)
     return content.strip()
 
-def extract_image_requests(html_content: str) -> tuple[str, list]:
-    """
-    Extract IMAGE_REQUEST JSON block from HTML content.
-    Returns: (clean_html, image_requests_list)
-    """
-    pattern = r'<!--\s*IMAGE_REQUEST_START\s*-->\s*(.+?)\s*<!--\s*IMAGE_REQUEST_END\s*-->'
-    match = re.search(pattern, html_content, re.DOTALL)
-    
-    if not match:
-        return html_content, []
-    
-    try:
-        json_str = match.group(1).strip()
-        image_requests = json.loads(json_str)
-        # Remove the IMAGE_REQUEST block from HTML
-        clean_html = re.sub(pattern, '', html_content, flags=re.DOTALL)
-        return clean_html, image_requests
-    except json.JSONDecodeError as e:
-        print(f"!! Warning: Failed to parse IMAGE_REQUEST JSON: {e}")
-        return html_content, []
-
-def generate_requested_images(image_requests: list, slide_id: str, style_context: dict, output_dir: Path) -> dict:
-    """
-    Generate images based on IMAGE_REQUEST.
-    Returns: {placeholder_id: actual_image_path}
-    """
-    # sys.path.insert(0, str(Path(__file__).parent.parent.parent / "generate_assets" / "scripts")) # REMOVED: Moved to local
-    try:
-        from generate_images import create_one_image
-    except ImportError:
-        # If running as module or different context, ensure local dir is in path
-        sys.path.append(str(Path(__file__).parent))
-        try:
-            from generate_images import create_one_image
-        except ImportError:
-            print("!! Warning: generate_images.py not found. Images will not be generated.")
-            return {}
-    
-    api_key = os.environ.get("OPENAI_API_KEY")
-    base_url = os.environ.get("OPENAI_BASE_URL")
-    model_name = os.environ.get("OPENAI_MODEL", "gpt-4o")
-    
-    if not api_key:
-        print("!! Warning: OPENAI_API_KEY not set. Skipping image generation.")
-        return {}
-    
-    images_dir = output_dir / "images"
-    images_dir.mkdir(parents=True, exist_ok=True)
-    
-    placeholder_map = {}
-    
-    for req in image_requests:
-        if req.get('slide_id') != slide_id:
-            continue  # Skip images for other slides
-        
-        placeholder_id = req.get('placeholder_id', 'image')
-        description = req.get('description', 'Abstract visualization')
-        aspect_ratio = req.get('aspect_ratio', 'square')
-        
-        # Generate unique filename
-        filename = f"{slide_id}_{placeholder_id}.png"
-        full_path = images_dir / filename
-        
-        print(f"   [Image Gen] {placeholder_id}: {description[:50]}...")
-        
-        success, _ = create_one_image(
-            description=description,
-            style_context=style_context,
-            output_path=full_path,
-            api_key=api_key,
-            base_url=base_url,
-            model_name=model_name,
-            aspect_ratio=aspect_ratio
-        )
-        
-        if success:
-            # Store relative path for HTML replacement
-            placeholder_map[placeholder_id] = f"images/{filename}"
-        else:
-            print(f"   !! Failed to generate image for {placeholder_id}")
-    
-    return placeholder_map
-
-def replace_image_placeholders(html_content: str, placeholder_map: dict) -> str:
-    """
-    Replace placeholder.png with actual generated image paths.
-    Matches: <img id="placeholder_id" src="placeholder.png" ... />
-    """
-    for placeholder_id, image_path in placeholder_map.items():
-        # Replace based on id attribute
-        pattern = f'(<img[^>]*id="{re.escape(placeholder_id)}"[^>]*src=")[^"]+(")'
-        html_content = re.sub(pattern, f'\\1{image_path}\\2', html_content)
-    
-    return html_content
-
 
 def extract_local_image_paths(slide: dict) -> list[str]:
     """
@@ -637,16 +542,10 @@ def process_brief(brief_path: str, output_dir: str, dna_dir: str, content_path: 
         # --- LOCAL IMAGE BINDING ---
         local_image_paths = extract_local_image_paths(slide)
 
-        # Extract IMAGE_REQUEST from LLM output, but we intentionally do not
-        # call external image generation in this workflow.
-        clean_html, image_requests = extract_image_requests(clean_html)
-
         if local_image_paths:
             copied_paths = copy_local_images(local_image_paths, slide_id, Path(output_dir))
             clean_html = replace_img_srcs_in_order(clean_html, copied_paths)
             print(f"   [Image] Bound {len(copied_paths)} local image(s) from content paths.")
-        elif image_requests:
-            print("   [Image] Skipping AI/Pixabay generation because local-only image mode is enabled.")
         # --------------------------
         
         # --- VECTOR ASSET REPLACEMENT ---

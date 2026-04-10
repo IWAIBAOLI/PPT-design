@@ -53,7 +53,7 @@ Beauty lies not just in valid code, but in **pleasing order**.
 *   **Action**: Review `content_items`.
 *   **Data Mapping**:
     *   **Text**: Prioritize using `item.body` as the main text source.
-    *   **Visual**: If `item_type: "visual"`, you MUST extract `item.image_description` to generate an `IMAGE_REQUEST`. **In all other cases, if the Draft does not explicitly demand content-related imagery, AI image generation is STRICTLY FORBIDDEN.**
+    *   **Visual**: If `item_type: "visual"`, only bind a real local image path already present in `item.image_description`. If no local image path is provided, render the slide without an image block.
     *   **Data**: If `item_type: "statistic"`, you **MUST** use `item.data_payload` to generate native charts or metric cards via **CSS or Chart.js**. **AI image generation for data is STRICTLY FORBIDDEN.**
 *   **Component Mapping**:
     *   *Ex*: "Revenue: $10B" -> `<div class="ppt-stat-card">`
@@ -93,68 +93,16 @@ During `<Thinking>`, you MUST answer:
 ---
 
 
-# Image Generation Policy
+# Image Policy
 
-AI Image generation is a high-latency, low-control asset strategy. It is strictly governed by the **"On-Demand Visuals"** protocol.
+The open-source workflow is **local-image only**.
 
-**Strict Control Principles**:
-- ✅ **Content Driven**: An image request is ONLY allowed if the slide content explicitly includes an `item_type: "visual"` entry (e.g., product shots, specific scene illustrations).
-- ❌ **No Decorative AI Images**: It is STRICTLY FORBIDDEN to request AI images for "aesthetic enhancement" or background "vibes".
-- 🎨 **Priority Alternatives**: For decoration, you **MUST** prioritize **Vector Graphics (SVG)** or **CSS-driven "Organic Shapes"** (e.g., irregular blurred blobs, non-circular border-radius shapes, soft layered gradients). This ensures lean code and total design control.
-
-**When to request images**:
-- ✅ Explicit Draft requirements: Real product photos, specific character/location illustrations.
-- ❌ Strictly forbidden: Abstract textures, ambient background images, icons, basic geometric shapes, **statistical charts**.
-
-**Description Quality Rules (Crucial for Pixabay Search)**:
-Since we prefer fetching real images from Pixabay, your `description` MUST be a **keyword-rich search query**.
-Structure: `[Type] of [Subject Keywords], [Context/Action], [Visual Style], [Dominant Color]`
-
-*   **Type**: "Photo", "Vector", "Illustration"
-*   **Subject**: "Business meeting", "Rocket launch", "Doctor"
-*   **Style**: "Minimalist", "Futuristic", "Vintage"
-*   **Color**: "Blue tone", "Warm lighting", "Monochrome"
-
-**Bad Description**: "A meeting."
-**Good Description**: "Photo of diverse business team meeting in modern glass office, professional interaction, bright daylight, corporate blue tones"
-
-**How to request**:
-After your HTML output, append an `IMAGE_REQUEST` JSON block:
-
-```html
-<!-- Your HTML Layout -->
-<div class="layout-grid-12">...</div>
-
-<!-- IMAGE_REQUEST_START -->
-[
-  {
-    "slide_id": "03",
-    "placeholder_id": "hero-bg",
-    "description": "Photo of modern office workspace with laptop and coffee, bright natural lighting, minimalist style, white and grey tones",
-    "aspect_ratio": "wide",
-    "usage": "background"
-  },
-  {
-    "slide_id": "05",
-    "placeholder_id": "product-shot",
-    "description": "3D render illustration of smartphone dashboard interface, floating with subtle shadow, high tech style, blue accent",
-    "aspect_ratio": "tall",
-    "usage": "content"
-  }
-]
-<!-- IMAGE_REQUEST_END -->
-```
-
-**In your HTML**, use the `placeholder_id` as the image source:
-```html
-<img id="hero-bg" src="placeholder.png" style="width: 100%; height: 100%; object-fit: cover;" />
-<!-- The build system will replace placeholder.png with the generated image -->
-```
-
-**Aspect Ratios**:
-- `"wide"`: 16:9 (1792×1024) - for backgrounds, hero images
-- `"square"`: 1:1 (1024×1024) - for icons, avatars
-- `"tall"`: 9:16 (1024×1792) - for mobile mockups, portraits
+**Rules**:
+- Use an `<img>` tag only when the content already provides a real local file path.
+- Do not generate `IMAGE_REQUEST`.
+- Do not call AI image generation.
+- Do not use stock-image search.
+- For decorative needs, use CSS shapes, gradients, SVGs, and layout techniques instead of photos.
 
 ---
 

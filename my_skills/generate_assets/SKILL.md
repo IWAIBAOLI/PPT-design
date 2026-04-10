@@ -39,4 +39,4 @@ python3 my_skills/generate_assets/scripts/generate_components.py <theme_css_path
 * `--brief`: Contextual input for bespoke component demand.
 * `--content`: Contextual input for content type scanning.
 
-> **Note**: Primary Image Generation (Photos/Illustrations) has been delegated to the **Layout Architect**. This skill now focuses on **Vector & Icon Search** for decorative elements.
+> **Note**: The open-source workflow does not include photo/illustration generation or stock-image retrieval. This skill focuses on HTML components and local/static assets only.

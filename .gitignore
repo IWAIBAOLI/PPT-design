@@ -19,6 +19,7 @@ yarn-error.log*
 # Local environment
 .codex/
 .ppt-factory/
+.internal/
 .env
 .env.*
 !.env.example

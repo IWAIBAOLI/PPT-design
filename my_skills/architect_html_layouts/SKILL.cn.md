@@ -46,7 +46,7 @@ Layout Architect 是 PPT 生成流水线中的 **结构工程师 (Structure Engi
 ### 3. 视觉设计 (Visual Design) - **Tier 3**
 *   **组件复用**: 像搭积木一样使用 `components.html` 中的预制件。
 *   **视觉层级**: 利用 `theme.css` 中的排版工具（字号、颜色、间距）建立清晰的信息层级。
-*   **图片生成**: 通过 `IMAGE_REQUEST` 注入与内容高度相关的插图或背景。
+*   **图片处理**: 开源版只支持内容 JSON 中已经提供的本地图片路径绑定。
 
 ## 使用方法 (Usage)
 
@@ -72,6 +72,8 @@ python3 my_skills/architect_html_layouts/scripts/build_slides.py \
 
 ### 布局
 没有 **静态模版**。所有布局均基于 Visual DNA 系统动态生成。
+
+> 说明：AI 生图与图库检索能力已从开源工作流中移除。
 
 ## 依赖 (Dependencies)
 - `openai`

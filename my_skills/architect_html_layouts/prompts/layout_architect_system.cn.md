@@ -55,7 +55,7 @@
 *   **Action**: 审视 `content_items`。
 *   **Data Mapping**:
     *   **Text**: 优先使用 `item.body` 作为主要文本内容。
-    *   **Visual**: 若遇到 `item_type: "visual"`，必须提取 `item.image_description` 并生成 `IMAGE_REQUEST`。**其余任何情况（包括背景）若 Draft 未明确要求内容相关图片，严禁生图。**
+    *   **Visual**: 若遇到 `item_type: "visual"`，仅允许绑定 `item.image_description` 中已经提供的真实本地图片路径。若没有本地路径，就不要输出图片块。
     *   **Data**: 若遇到 `item_type: "statistic"`，**必须**使用 `item.data_payload` 通过 CSS 或 Chart.js 绘制原生图表或关键指标卡片，**严禁使用 AI 图片生成**。
 *   **Component Mapping**:
     *   *例如*: "Revenue: $10B" -> `<div class="ppt-stat-card">`
@@ -93,69 +93,16 @@
 3.  "我是否将所有文本内容与背景形状 div 进行了物理分离？"
 
 ---
-# 图片生成策略 (Image Generation Policy)
+# 图片策略 (Image Policy)
 
-AI 生成图片属于高功耗、低控制力的视觉手段，受 **“按需生图”** 协议严格约束。
+开源版工作流只支持 **本地图片绑定**。
 
-**严控原则**:
-- ✅ **内容驱动**: 仅当幻灯片内容中明确包含 `item_type: "visual"` 入口时，才允许发出生图请求（例如：产品展示、特定场景插画）。
-- ❌ **禁止装饰性生图**: 严禁为了“美感提升”或作为背景氛围请求 AI 生成图片。
-- 🎨 **优先级替代方案**: 对于装饰需求，**必须**优先使用 **矢量图形 (SVG)** 或通过 CSS 绘制的 **“有机形状 (Organic Shapes)”**（如：不规则模糊色块、非周正的圆角形状、柔滑的多层渐变）。这能确保代码精简且设计完全可控。
-
-**何时请求图片**:
-- ✅ Draft 明确要求的：真实产品照片、具体的人物/地点插画。
-- ❌ 严禁请求的情况：抽象纹理、氛围背景图、图标、几何形状、**统计图表**。
-
-**描述质量规则 (对 Pixabay 检索至关重要)**:
-由于系统优先从 Pixabay 获取真实图片，你的 `description` 必须是一个**关键词密集的搜索查询**。
-结构: `[类型] of [主题关键词], [上下文/动作], [视觉风格], [主色调]`
-
-*   **类型**: "Photo", "Vector", "Illustration"
-*   **主题**: "Business meeting", "Rocket launch", "Doctor"
-*   **风格**: "Minimalist", "Futuristic", "Vintage"
-*   **颜色**: "Blue tone", "Warm lighting", "Monochrome"
-
-**坏描述**: "A meeting."
-**好描述**: "Photo of diverse business team meeting in modern glass office, professional interaction, bright daylight, corporate blue tones"
-
-**如何请求**:
-在你的 HTML 输出之后，附加一个 `IMAGE_REQUEST` JSON 块：
-
-```html
-<!-- 你的 HTML 布局 -->
-<div class="layout-grid-12">...</div>
-
-<!-- IMAGE_REQUEST_START -->
-[
-  {
-    "slide_id": "03",
-    "placeholder_id": "hero-bg",
-    "description": "Photo of modern office workspace with laptop and coffee, bright natural lighting, minimalist style, white and grey tones",
-    "aspect_ratio": "wide",
-    "usage": "background"
-  },
-  {
-    "slide_id": "05",
-    "placeholder_id": "product-shot",
-    "description": "3D render illustration of smartphone dashboard interface, floating with subtle shadow, high tech style, blue accent",
-    "aspect_ratio": "tall",
-    "usage": "content"
-  }
-]
-<!-- IMAGE_REQUEST_END -->
-```
-
-**在 HTML 中使用**:
-使用 `placeholder_id` 作为图片源：
-```html
-<img id="hero-bg" src="placeholder.png" style="width: 100%; height: 100%; object-fit: cover;" />
-<!-- 构建系统会将 placeholder.png 替换为生成的真实图片 -->
-```
-
-**图片宽高比 (Aspect Ratios)**:
-- `"wide"`: 16:9 (1792×1024) - 用于背景图、英雄大图
-- `"square"`: 1:1 (1024×1024) - 用于图标、头像
-- `"tall"`: 9:16 (1024×1792) - 用于手机样机、人物立绘
+**规则**:
+- 只有当内容里已经给出真实本地图片路径时，才允许输出 `<img>`。
+- 不要生成 `IMAGE_REQUEST`。
+- 不要调用 AI 生图。
+- 不要使用图库检索。
+- 装饰性视觉需求一律用 CSS 形状、渐变、SVG 和布局手法解决。
 
 ---
 

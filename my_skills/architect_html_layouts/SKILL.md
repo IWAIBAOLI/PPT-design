@@ -37,7 +37,7 @@ Your core responsibility is not just "placing content", but ensuring the generat
 ### 3. Visual Design - **Tier 3**
 *   **Component Reuse**: Build like LEGOs using `components.html`.
 *   **Visual Hierarchy**: Use `theme.css` typography tools (size, color, spacing) to establish clear hierarchy.
-*   **Image Generation**: Inject `IMAGE_REQUEST` for context-aware illustrations or backgrounds.
+*   **Image Handling**: Open-source mode supports only user-provided local image paths already present in the content JSON.
 
 ## Usage
 
@@ -63,6 +63,8 @@ python3 my_skills/architect_html_layouts/scripts/build_slides.py \
 
 ### Layouts
 There are **NO static templates**. All layouts are generated on-the-fly based on the Visual DNA system.
+
+> Note: AI image generation and stock-image retrieval have been removed from the open-source workflow.
 
 ## Dependencies
 - `openai`

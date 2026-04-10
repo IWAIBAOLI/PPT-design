@@ -16,16 +16,11 @@ description: HTML Constructor Agent. Generates a comprehensive HTML Component Ma
 ## 核心输出
 1.  **`components.html` (The PPT Arsenal)**:
     一个包含数十种预制组件的 HTML 文件。
-    *注意*：此文件仅包含代码结构。如果需要图片素材，通过配合 `generate_images.py` 独立生成。
-
-## 辅助工具 (Auxiliary Tools)
-本技能包包含一个独立的插画生成器：
-*   **`my_skills/generate_assets/scripts/generate_images.py`**:
-    负责扫描 Draft 中的 "visual" 需求并生成图片到 `assets/images/`。此脚本通常由 Layout Architect 在确定最终排版后调用。
+    *注意*：开源版仅包含组件结构，不包含独立图片素材生成流程。
 
 ## 关键职责 (Responsibility)
 *   **Structure Validity**: 确保 HTML 结构合规。
-*   **Visual Consistency**: 确保生成的图片风格与 CSS 主题一致 (例如：CSS是赛博朋克，生成的图也必须是 neon 风格)。
+*   **Visual Consistency**: 确保生成的组件风格与 CSS 主题一致。
 
 ## 使用方法 (Usage)
 
@@ -39,4 +34,4 @@ python3 my_skills/generate_assets/scripts/generate_components.py <theme_css_path
 * `--brief`: 传入 `brief.json`，用于分析定制组件需求。
 * `--content`: 传入 `content_draft.json`，用于扫描特殊内容类型。
 
-> **注意**: 核心图片生成 (Image Generation) 已移交由 **Layout Architect** 负责调度。本技能现在专注于 **矢量装饰 (Vector & Icon)** 的搜索与生成。
+> **注意**: 开源版不包含图片生成与图库检索工作流。本技能专注于 HTML 组件构造。

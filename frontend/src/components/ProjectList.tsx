@@ -19,6 +19,7 @@ interface ProjectListProps {
 export default function ProjectList({ onSelectProject, selectedProjectId }: ProjectListProps) {
     const [projects, setProjects] = React.useState<Project[]>([]);
     const [loading, setLoading] = React.useState(true);
+    const locale = typeof navigator !== 'undefined' ? navigator.language : 'en-US';
 
     React.useEffect(() => {
         fetchProjects();
@@ -53,7 +54,7 @@ export default function ProjectList({ onSelectProject, selectedProjectId }: Proj
 
     const formatDate = (dateStr: string) => {
         const date = new Date(dateStr);
-        return new Intl.DateTimeFormat('zh-CN', {
+        return new Intl.DateTimeFormat(locale, {
             month: 'short',
             day: 'numeric',
             hour: '2-digit',
@@ -72,7 +73,7 @@ export default function ProjectList({ onSelectProject, selectedProjectId }: Proj
     if (projects.length === 0) {
         return (
             <div className="text-center text-slate-400 text-sm py-8">
-                暂无项目<br />创建第一个项目开始
+                No projects yet.<br />Create your first project to get started.
             </div>
         );
     }

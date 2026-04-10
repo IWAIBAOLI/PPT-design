@@ -632,7 +632,7 @@ export default function Home() {
     setUserPrompt(project.user_prompt || '');
     setBriefJson(project.brief_json ? JSON.stringify(project.brief_json, null, 2) : '');
     setDraftJson(project.content_draft ? JSON.stringify(project.content_draft, null, 2) : '');
-    setBriefMessage(`已加载项目: ${project.project_name}`);
+    setBriefMessage(`Loaded project: ${project.project_name}`);
     setShowProjectList(false);
 
     // FETCH RESULTS
@@ -913,7 +913,7 @@ export default function Home() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-start">
           <div className="bg-white w-80 h-full shadow-xl overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center">
-              <h3 className="font-semibold text-slate-900">项目历史</h3>
+              <h3 className="font-semibold text-slate-900">Project History</h3>
               <button onClick={() => setShowProjectList(false)} className="text-slate-400 hover:text-slate-600">×</button>
             </div>
             <div className="p-4">
@@ -934,7 +934,7 @@ export default function Home() {
               </p>
               {currentProjectId && (
                 <div className="mt-2 text-sm text-indigo-600 font-medium">
-                  当前项目: {projectName}
+                  Current Project: {projectName}
                 </div>
               )}
             </div>
@@ -943,7 +943,7 @@ export default function Home() {
                 onClick={() => setShowProjectList(true)}
                 className="flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors">
                 <FolderOpen className="w-4 h-4" />
-                项目历史
+                Project History
               </button>
               <div className="h-6 w-px bg-slate-300"></div>
               <label className="text-sm font-medium text-slate-700">Model:</label>

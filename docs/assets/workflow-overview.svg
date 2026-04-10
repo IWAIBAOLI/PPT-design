@@ -1,0 +1,82 @@
+<svg width="1600" height="520" viewBox="0 0 1600 520" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">PPT Design workflow overview</title>
+  <desc id="desc">A three-stage workflow showing project setup, structured generation, and export pipeline.</desc>
+
+  <rect width="1600" height="520" rx="28" fill="#F8FAFC"/>
+  <rect x="24" y="24" width="1552" height="472" rx="24" fill="white" stroke="#E2E8F0"/>
+
+  <text x="72" y="92" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">Workflow At A Glance</text>
+  <text x="72" y="124" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="18">A local-first pipeline from project setup to validated PPTX export.</text>
+
+  <rect x="72" y="166" width="440" height="248" rx="24" fill="#EEF2FF"/>
+  <text x="104" y="212" fill="#4338CA" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">01 PROJECT SETUP</text>
+  <text x="104" y="238" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="16">Create a workspace and bring in your own assets.</text>
+
+  <rect x="104" y="276" width="118" height="76" rx="18" fill="white" stroke="#C7D2FE"/>
+  <text x="163" y="307" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Create</text>
+  <text x="163" y="328" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Project</text>
+
+  <rect x="250" y="276" width="118" height="76" rx="18" fill="white" stroke="#C7D2FE"/>
+  <text x="309" y="307" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Choose</text>
+  <text x="309" y="328" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Folder</text>
+
+  <rect x="396" y="276" width="84" height="76" rx="18" fill="white" stroke="#C7D2FE"/>
+  <text x="438" y="296" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Upload</text>
+  <text x="438" y="317" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Local</text>
+  <text x="438" y="338" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Images</text>
+
+  <line x1="222" y1="314" x2="250" y2="314" stroke="#818CF8" stroke-width="3"/>
+  <polygon points="250,314 241,308 241,320" fill="#818CF8"/>
+  <line x1="368" y1="314" x2="396" y2="314" stroke="#818CF8" stroke-width="3"/>
+  <polygon points="396,314 387,308 387,320" fill="#818CF8"/>
+
+  <rect x="580" y="166" width="440" height="248" rx="24" fill="#ECFDF5"/>
+  <text x="612" y="212" fill="#047857" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">02 STRUCTURED GENERATION</text>
+  <text x="612" y="238" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="16">Turn inputs into inspectable draft, brief, and layout artifacts.</text>
+
+  <rect x="612" y="276" width="118" height="76" rx="18" fill="white" stroke="#A7F3D0"/>
+  <text x="671" y="307" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Content</text>
+  <text x="671" y="328" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Draft</text>
+
+  <rect x="758" y="276" width="118" height="76" rx="18" fill="white" stroke="#A7F3D0"/>
+  <text x="817" y="307" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Design</text>
+  <text x="817" y="328" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Brief</text>
+
+  <rect x="904" y="276" width="84" height="76" rx="18" fill="white" stroke="#A7F3D0"/>
+  <text x="946" y="307" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">HTML</text>
+  <text x="946" y="328" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Layouts</text>
+
+  <line x1="730" y1="314" x2="758" y2="314" stroke="#34D399" stroke-width="3"/>
+  <polygon points="758,314 749,308 749,320" fill="#34D399"/>
+  <line x1="876" y1="314" x2="904" y2="314" stroke="#34D399" stroke-width="3"/>
+  <polygon points="904,314 895,308 895,320" fill="#34D399"/>
+
+  <rect x="1088" y="166" width="440" height="248" rx="24" fill="#FFF7ED"/>
+  <text x="1120" y="212" fill="#C2410C" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">03 EXPORT PIPELINE</text>
+  <text x="1120" y="238" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="16">Validate, assemble, and review the final deck output.</text>
+
+  <rect x="1120" y="276" width="118" height="76" rx="18" fill="white" stroke="#FDBA74"/>
+  <text x="1179" y="307" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Validate</text>
+  <text x="1179" y="328" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">HTML</text>
+
+  <rect x="1266" y="276" width="118" height="76" rx="18" fill="white" stroke="#FDBA74"/>
+  <text x="1325" y="307" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Assemble</text>
+  <text x="1325" y="328" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">PPTX</text>
+
+  <rect x="1412" y="276" width="84" height="76" rx="18" fill="white" stroke="#FDBA74"/>
+  <text x="1454" y="307" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Review</text>
+  <text x="1454" y="328" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Iterate</text>
+
+  <line x1="1238" y1="314" x2="1266" y2="314" stroke="#FB923C" stroke-width="3"/>
+  <polygon points="1266,314 1257,308 1257,320" fill="#FB923C"/>
+  <line x1="1384" y1="314" x2="1412" y2="314" stroke="#FB923C" stroke-width="3"/>
+  <polygon points="1412,314 1403,308 1403,320" fill="#FB923C"/>
+
+  <line x1="512" y1="314" x2="580" y2="314" stroke="#94A3B8" stroke-width="4" stroke-dasharray="10 10"/>
+  <polygon points="580,314 568,306 568,322" fill="#94A3B8"/>
+  <line x1="1020" y1="314" x2="1088" y2="314" stroke="#94A3B8" stroke-width="4" stroke-dasharray="10 10"/>
+  <polygon points="1088,314 1076,306 1076,322" fill="#94A3B8"/>
+
+  <rect x="72" y="438" width="1456" height="34" rx="17" fill="#F8FAFC" stroke="#E2E8F0"/>
+  <text x="800" y="460" text-anchor="middle" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="15">Local-first inputs → structured generation → validated export</text>
+</svg>

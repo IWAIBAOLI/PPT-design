@@ -6,26 +6,7 @@ PPT Design is an open-source slide production system for teams who want more con
 
 ## Workflow At A Glance
 
-```mermaid
-flowchart LR
-    subgraph S1["Project Setup"]
-        A["Create Project"] --> B["Choose Local Folder"]
-        B --> C["Upload Local Images"]
-    end
-
-    subgraph S2["Structured Generation"]
-        D["Generate Content Draft"] --> E["Generate Design Brief"]
-        E --> F["Generate HTML Layouts"]
-    end
-
-    subgraph S3["Export Pipeline"]
-        G["Validate HTML"] --> H["Assemble PPTX"]
-        H --> I["Review And Iterate"]
-    end
-
-    C --> D
-    F --> G
-```
+![PPT Design workflow overview](docs/assets/workflow-overview.svg)
 
 ## Why This Project Exists
 
@@ -147,15 +128,40 @@ Notes:
 
 ## Quick Start
 
-Start the frontend:
+Fastest setup:
 
 ```bash
+make setup
+make dev
+```
+
+Or, if you prefer running the bootstrap script directly:
+
+```bash
+bash scripts/bootstrap_open_source.sh
 cd frontend
-npm install
 npm run dev
 ```
 
 Then open [http://localhost:3000](http://localhost:3000).
+
+## Dependency Setup
+
+The open-source version is now grouped into three simple entry points:
+
+- [requirements-open-source.txt](requirements-open-source.txt): combined Python dependencies for the public workflow
+- [scripts/bootstrap_open_source.sh](scripts/bootstrap_open_source.sh): one-command environment setup
+- [Makefile](Makefile): shortcuts for setup and local development
+
+Useful commands:
+
+```bash
+make setup
+make setup-python
+make setup-frontend
+make setup-assembly
+make dev
+```
 
 ## Environment
 

@@ -45,37 +45,28 @@
     <tspan x="120" dy="20">not hidden app state.</tspan>
   </text>
 
-  <rect x="120" y="346" width="306" height="68" rx="20" fill="#FFFFFF" stroke="#BFDBFE"/>
+  <rect x="120" y="344" width="306" height="74" rx="20" fill="#FFFFFF" stroke="#BFDBFE"/>
   <text x="146" y="374" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600">Content Draft</text>
   <text x="146" y="396" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="14">Structured content plan for the deck.</text>
 
-  <rect x="120" y="430" width="306" height="68" rx="20" fill="#FFFFFF" stroke="#BFDBFE"/>
-  <text x="146" y="458" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600">Design Brief</text>
-  <text x="146" y="480" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="14">Narrative direction and slide intent.</text>
+  <rect x="120" y="430" width="306" height="74" rx="20" fill="#FFFFFF" stroke="#BFDBFE"/>
+  <text x="146" y="460" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600">Design Brief</text>
+  <text x="146" y="482" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="14">Narrative direction and slide intent.</text>
 
-  <rect x="560" y="220" width="480" height="108" rx="24" fill="#FFFFFF" stroke="#BBF7D0"/>
+  <rect x="560" y="214" width="480" height="110" rx="24" fill="#FFFFFF" stroke="#BBF7D0"/>
   <text x="592" y="256" fill="#047857" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="1.2">GENERATION ENGINE</text>
   <text x="592" y="286" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">Visual DNA</text>
-  <text x="592" y="308" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="15">
-    <tspan x="592" dy="0">Define the presentation system:</tspan>
-    <tspan x="592" dy="18">color, type, spacing, tone.</tspan>
-  </text>
+  <text x="592" y="310" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="15">Define the presentation system: color, type, spacing, tone.</text>
 
-  <rect x="560" y="344" width="480" height="108" rx="24" fill="#FFFFFF" stroke="#D9F99D"/>
+  <rect x="560" y="338" width="480" height="110" rx="24" fill="#FFFFFF" stroke="#D9F99D"/>
   <text x="592" y="380" fill="#65A30D" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="1.2">GENERATION ENGINE</text>
   <text x="592" y="410" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">HTML Bricks</text>
-  <text x="592" y="432" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="15">
-    <tspan x="592" dy="0">Generate reusable component patterns</tspan>
-    <tspan x="592" dy="18">from the DNA.</tspan>
-  </text>
+  <text x="592" y="434" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="15">Generate reusable component patterns from the DNA.</text>
 
-  <rect x="560" y="468" width="480" height="108" rx="24" fill="#FFFFFF" stroke="#FDE68A"/>
-  <text x="592" y="504" fill="#B45309" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="1.2">GENERATION ENGINE</text>
-  <text x="592" y="534" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">Layout Architect</text>
-  <text x="592" y="556" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="15">
-    <tspan x="592" dy="0">Compose final slide HTML from content,</tspan>
-    <tspan x="592" dy="18">DNA, components, and local images.</tspan>
-  </text>
+  <rect x="560" y="462" width="480" height="118" rx="24" fill="#FFFFFF" stroke="#FDE68A"/>
+  <text x="592" y="498" fill="#B45309" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="1.2">GENERATION ENGINE</text>
+  <text x="592" y="528" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">Layout Architect</text>
+  <text x="592" y="552" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="15">Compose final slide HTML from content, DNA, components, and local images.</text>
 
   <text x="1174" y="242" fill="#C2410C" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="1.4">OUTPUTS</text>
   <text x="1174" y="280" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700">Editable artifacts</text>
@@ -84,16 +75,16 @@
     <tspan x="1174" dy="20">inspectable, and reusable on disk.</tspan>
   </text>
 
-  <rect x="1174" y="346" width="306" height="82" rx="20" fill="#FFFFFF" stroke="#FED7AA"/>
+  <rect x="1174" y="344" width="306" height="90" rx="20" fill="#FFFFFF" stroke="#FED7AA"/>
   <text x="1200" y="374" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600">HTML Slides + Validation</text>
   <text x="1200" y="398" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="14">
     <tspan x="1200" dy="0">Previewable slide HTML checked</tspan>
     <tspan x="1200" dy="17">against PPT constraints.</tspan>
   </text>
 
-  <rect x="1174" y="444" width="306" height="82" rx="20" fill="#FFFFFF" stroke="#FED7AA"/>
-  <text x="1200" y="472" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600">PPTX Assembly</text>
-  <text x="1200" y="496" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="14">
+  <rect x="1174" y="450" width="306" height="90" rx="20" fill="#FFFFFF" stroke="#FED7AA"/>
+  <text x="1200" y="480" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600">PPTX Assembly</text>
+  <text x="1200" y="504" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="14">
     <tspan x="1200" dy="0">Final editable PowerPoint deck</tspan>
     <tspan x="1200" dy="17">generated from verified HTML.</tspan>
   </text>

@@ -20,6 +20,7 @@ yarn-error.log*
 .codex/
 .ppt-factory/
 .internal/
+supabase/
 .env
 .env.*
 !.env.example
@@ -39,6 +40,12 @@ pipeline_input/draft_image_assets.json
 test_assets/output/
 my_skills/architect_html_layouts/test_output/
 my_skills/define_visual_dna/test_output/
+my_skills/create_design_brief/debug_logs/
+my_skills/define_visual_dna/debug_logs/
+my_skills/generate_assets/test_output/
+my_skills/define_visual_dna/test_output_theme.css
+my_skills/define_visual_dna/test_output_theme_real.css
+pipeline_input/content_draft_from_md.json
 supabase/.temp/
 supabase/.branches/
 

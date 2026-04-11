@@ -66,7 +66,6 @@ export default function Home() {
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [showProjectList, setShowProjectList] = useState(false);
   const [refreshArtifacts, setRefreshArtifacts] = useState(0);
-  const [storageMode, setStorageMode] = useState<'local' | 'supabase'>('local');
   const [projectRootInput, setProjectRootInput] = useState('');
   const [projectRoot, setProjectRoot] = useState<string | null>(null);
   const [settingsMessage, setSettingsMessage] = useState('');
@@ -84,7 +83,7 @@ export default function Home() {
   const [isLoadingImages, setIsLoadingImages] = useState(false);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
 
-  const isStorageReady = storageMode === 'supabase' || Boolean(projectRoot);
+  const isStorageReady = Boolean(projectRoot);
   const isLlmReady = Boolean(llmApiKey.trim() && llmModel.trim());
 
   useEffect(() => {
@@ -92,9 +91,6 @@ export default function Home() {
       .then(res => res.json())
       .then(data => {
         if (!data.success) return;
-        if (data.storageMode) {
-          setStorageMode(data.storageMode);
-        }
         const configuredRoot = data.localSettings?.projectRoot || '';
         const suggestedRoot = data.suggestedProjectRoot || '';
         setProjectRoot(configuredRoot || null);
@@ -169,9 +165,6 @@ export default function Home() {
         setSettingsMessage(data.error || 'Failed to save project folder.');
         return;
       }
-      if (data.storageMode) {
-        setStorageMode(data.storageMode);
-      }
       const savedRoot = data.localSettings?.projectRoot || null;
       setProjectRoot(savedRoot);
       setProjectRootInput(savedRoot || projectRootInput);
@@ -196,9 +189,6 @@ export default function Home() {
       if (!data.success) {
         setSettingsMessage(data.error || 'Failed to choose project folder.');
         return;
-      }
-      if (data.storageMode) {
-        setStorageMode(data.storageMode);
       }
       const savedRoot = data.localSettings?.projectRoot || null;
       setProjectRoot(savedRoot);
@@ -270,9 +260,6 @@ export default function Home() {
       if (!data.success) {
         console.error("Error fetching results:", data.error);
         return;
-      }
-      if (data.storageMode) {
-        setStorageMode(data.storageMode);
       }
       const results = data.project?.pipeline_results || [];
       if (results.length > 0) {
@@ -358,9 +345,6 @@ export default function Home() {
 
       const data = await res.json();
       if (data.success) {
-        if (data.storageMode) {
-          setStorageMode(data.storageMode);
-        }
         const pid = data.project.id;
         // UPDATE STATE IMMEDIATELY
         setCurrentProjectId(pid);
@@ -697,9 +681,6 @@ export default function Home() {
       if (contentType && contentType.includes('application/json')) {
       const data = await res.json();
       if (data.success) {
-        if (data.storageMode) {
-          setStorageMode(data.storageMode);
-        }
         setPipelineState(prev => ({
           ...prev,
           [stepKey]: { ...prev[stepKey], state: 'success', message: data.message, output: data.output }
@@ -930,7 +911,7 @@ export default function Home() {
               <h1 className="text-3xl font-bold text-slate-900">PPT Factory Workflow</h1>
               <p className="text-slate-600 mt-2">End-to-End Presentation Generation Pipeline</p>
               <p className="text-xs text-slate-500 mt-1">
-                Storage Mode: {storageMode === 'supabase' ? 'Supabase Cloud' : 'Local Filesystem'}
+                Storage: Local Filesystem
               </p>
               {currentProjectId && (
                 <div className="mt-2 text-sm text-indigo-600 font-medium">
@@ -953,7 +934,7 @@ export default function Home() {
             </div>
           </header>
 
-          {storageMode === 'local' && (
+          {(
             <div className="mb-8 grid gap-4">
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                 <div className="flex items-start justify-between gap-4">

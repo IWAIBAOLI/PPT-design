@@ -170,11 +170,8 @@ Optional frontend environment settings live in [frontend/.env.local.example](fro
 Common optional variables:
 
 - `ANTHROPIC_API_KEY`
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `USE_SUPABASE_STORAGE=true`
 
-If `USE_SUPABASE_STORAGE` is not set to `true`, the app runs in local mode and requires a writable project folder before generation begins.
+The public app runs in local mode and requires a writable project folder before generation begins.
 
 ## Repository Guide
 

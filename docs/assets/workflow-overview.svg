@@ -66,7 +66,10 @@
   <rect x="560" y="462" width="480" height="118" rx="24" fill="#FFFFFF" stroke="#FDE68A"/>
   <text x="592" y="498" fill="#B45309" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="1.2">GENERATION ENGINE</text>
   <text x="592" y="528" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">Layout Architect</text>
-  <text x="592" y="552" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="15">Compose final slide HTML from content, DNA, components, and local images.</text>
+  <text x="592" y="548" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="15">
+    <tspan x="592" dy="0">Compose final slide HTML from content,</tspan>
+    <tspan x="592" dy="18">DNA, components, and local images.</tspan>
+  </text>
 
   <text x="1174" y="242" fill="#C2410C" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="1.4">OUTPUTS</text>
   <text x="1174" y="280" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700">Editable artifacts</text>

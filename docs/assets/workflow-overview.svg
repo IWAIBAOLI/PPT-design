@@ -35,7 +35,7 @@
   <text x="88" y="144" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="20">Structured inputs in, inspectable HTML and editable PPTX out.</text>
 
   <rect x="88" y="194" width="370" height="356" rx="30" fill="url(#inputs)" filter="url(#cardShadow)"/>
-  <rect x="494" y="166" width="612" height="412" rx="34" fill="url(#engine)" filter="url(#cardShadow)"/>
+  <rect x="494" y="166" width="612" height="446" rx="34" fill="url(#engine)" filter="url(#cardShadow)"/>
   <rect x="1142" y="194" width="370" height="356" rx="30" fill="url(#outputs)" filter="url(#cardShadow)"/>
 
   <text x="120" y="242" fill="#1D4ED8" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="1.4">INPUTS</text>
@@ -97,6 +97,6 @@
   <line x1="1106" y1="372" x2="1142" y2="372" stroke="#94A3B8" stroke-width="4" stroke-dasharray="8 8"/>
   <polygon points="1142,372 1130,364 1130,380" fill="#94A3B8"/>
 
-  <rect x="88" y="590" width="1424" height="58" rx="22" fill="#0F172A"/>
-  <text x="112" y="626" fill="#CBD5E1" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14">draft.json + brief.json + local images  →  theme.css + components.html + slide_*.html  →  output.pptx</text>
+  <rect x="88" y="606" width="1424" height="58" rx="22" fill="#0F172A"/>
+  <text x="112" y="642" fill="#CBD5E1" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14">draft.json + brief.json + local images  →  theme.css + components.html + slide_*.html  →  output.pptx</text>
 </svg>

@@ -206,3 +206,16 @@ Contributions are welcome, especially around:
 - HTML-to-PPT conversion reliability
 
 Please keep public contributions aligned with the open-source track. Features that depend on private prompts, internal assets, AI image generation, or stock retrieval should stay out of the public repository.
+
+## Acknowledgments
+
+PPT Design is an integration-oriented workflow built on top of multiple open-source tools, libraries, and project patterns rather than a from-scratch monolith.
+
+Key inspirations and upstream building blocks include:
+
+- [Anthropic Skills](https://github.com/anthropics/skills) for the skill-oriented workflow pattern and `SKILL.md`-style task decomposition
+- [ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) as a key reference for the Visual DNA style-library direction used in the DNA stage
+- [PptxGenJS](https://github.com/gitbrent/PptxGenJS), [Playwright](https://github.com/microsoft/playwright), and [python-pptx](https://github.com/scanny/python-pptx) for the HTML-to-PPT pipeline foundation
+- [Iconify](https://iconify.design/) / Material Design Icons and [unDraw](https://undraw.co/) for parts of the visual asset layer
+
+This repository focuses on turning those ideas into a local-first, inspectable, open-source PPT production workflow.

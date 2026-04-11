@@ -1,5 +1,5 @@
 <svg width="1600" height="700" viewBox="0 0 1600 700" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">PPT Design workflow overview</title>
+  <title id="title">PPT-Factory workflow overview</title>
   <desc id="desc">A local-first PPT workflow with structured inputs, a generation engine built around Visual DNA and HTML layout, and editable outputs.</desc>
 
   <defs>
@@ -31,7 +31,7 @@
   <rect width="1600" height="700" rx="28" fill="url(#bg)"/>
   <rect x="28" y="28" width="1544" height="644" rx="28" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#shadow)"/>
 
-  <text x="88" y="104" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="40" font-weight="700">How PPT Design Works</text>
+  <text x="88" y="104" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="40" font-weight="700">How PPT-Factory Works</text>
   <text x="88" y="144" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="20">Structured inputs in, inspectable HTML and editable PPTX out.</text>
 
   <rect x="88" y="194" width="370" height="356" rx="30" fill="url(#inputs)" filter="url(#cardShadow)"/>

@@ -2,7 +2,7 @@
 
 Turn a structured brief into production-ready HTML slides and a final PPTX, with a local-first workflow that keeps your project files visible on disk.
 
-PPT Design is an open-source slide production system for teams who want more control than prompt-in, deck-out demos. It gives you an explicit project workspace, structured intermediate artifacts, HTML slide generation, validation, and PPTX assembly in one pipeline.
+PPT Factory is an open-source slide production system for teams who want more control than prompt-in, deck-out demos. It gives you an explicit project workspace, structured intermediate artifacts, HTML slide generation, validation, and PPTX assembly in one pipeline.
 
 ## Workflow At A Glance
 
@@ -17,7 +17,7 @@ Most AI presentation tools hide the real work inside opaque state:
 - iteration is awkward
 - output quality is hard to stabilize
 
-PPT Design takes a different approach.
+PPT Factory takes a different approach.
 
 Instead of treating slide generation as a black box, it treats it as a visible production workflow:
 
@@ -101,7 +101,7 @@ That means your draft, brief, uploaded images, generated theme, reusable compone
 
 ## Why The Local-First Model Matters
 
-PPT Design is especially useful when you care about:
+PPT Factory is especially useful when you care about:
 
 - traceable intermediate artifacts
 - repeatable slide generation

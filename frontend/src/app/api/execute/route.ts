@@ -15,7 +15,6 @@ const SKILLS_DIR = path.join(ROOT_DIR, 'my_skills');
 const DNA_SCRIPT = path.join(SKILLS_DIR, 'define_visual_dna', 'scripts', 'generate_dna.py');
 const BUILDER_SCRIPT = path.join(SKILLS_DIR, 'architect_html_layouts', 'scripts', 'build_slides.py');
 const LINT_SCRIPT = path.join(SKILLS_DIR, 'assemble_pptx_file', 'scripts', 'lint_ppt_html.py');
-const AUTO_FIX_SCRIPT = path.join(SKILLS_DIR, 'assemble_pptx_file', 'scripts', 'auto_fix_html.py');
 const ASSEMBLER_SCRIPT = path.join(SKILLS_DIR, 'assemble_pptx_file', 'scripts', 'batch_convert.js');
 const QC_SCRIPT = path.join(SKILLS_DIR, 'inspect_pptx_quality', 'scripts', 'qc_inspector.py');
 
@@ -40,103 +39,88 @@ const getBaseEnv = async (modelOverride?: string) => {
     };
 };
 
-// --- Helper: Local Archiver & DB Syncer ---
-async function archiveFile(projectId: string, stepName: string, sourcePath: string, fileName: string, explicitFileType?: string, minTimestamp?: number) {
-    if (!projectId) return;
-
+async function registerArtifact(projectId: string, sourcePath: string, fileName: string, fileType: string, minTimestamp?: number) {
+    if (!projectId) return null;
     const generatedProjectsDir = await getGeneratedProjectsDir();
-    const projectDir = path.join(generatedProjectsDir, projectId);
-    const stepDir = path.join(projectDir, stepName);
-    const destPath = path.join(stepDir, fileName);
-
-    // Check if source file exists
     let stats;
     try {
         stats = await fs.stat(sourcePath);
-    } catch (e) {
-        console.warn(`[API] Source file not found for archiving: ${sourcePath}`);
+    } catch {
         return null;
     }
-
-    // Time-based filtering: If file was not modified after minTimestamp, skip it.
     if (minTimestamp && stats.mtimeMs < minTimestamp) {
-        // console.log(`[API] Skipping ${fileName} (Not modified: ${stats.mtimeMs} < ${minTimestamp})`);
         return null;
     }
-
-    await fs.mkdir(stepDir, { recursive: true });
-
-    if (stats.isDirectory()) {
-        await fs.cp(sourcePath, destPath, { recursive: true });
-        console.log(`[API] Archived directory ${fileName} to ${stepDir}`);
-        return destPath; // Directories are not synced to DB individually
-    } else {
-        await fs.copyFile(sourcePath, destPath);
-        console.log(`[API] Archived file ${fileName} to ${stepDir}`);
-    }
-
-    try {
-        let fileType = explicitFileType || 'other';
-
-        if (!explicitFileType) {
-            if (stepName === 'dna') fileType = 'theme_css';
-            else if (stepName === 'assets') fileType = 'html_assets';
-            else if (stepName === 'layout' && fileName.endsWith('.html')) fileType = 'html_slide';
-            else if (stepName === 'assembly' && fileName.endsWith('.pptx')) fileType = 'pptx_output';
-        }
-
-        await recordGeneratedFile({
-            project_id: projectId,
-            file_type: fileType,
-            file_name: fileName,
-            storage_path: path.relative(generatedProjectsDir, destPath),
-            file_size: stats.size,
-        });
-    } catch (e: any) {
-        console.error(`[API] Metadata Sync Error for ${fileName}:`, e.message);
-    }
-
-    return destPath;
+    await recordGeneratedFile({
+        project_id: projectId,
+        file_type: fileType,
+        file_name: fileName,
+        storage_path: path.relative(generatedProjectsDir, sourcePath),
+        file_size: stats.size,
+    });
+    return sourcePath;
 }
 
-// --- Helper: Sync Artifacts (Extracted for reusability) ---
-async function syncArtifacts(step: string, projectId: string, projectWorkDir: string, projectHtmlDir: string, projectFinalOutput: string, startTime: number) {
+async function cleanupLegacyProjectArtifacts(projectRoot: string) {
+    const legacyPaths = [
+        path.join(projectRoot, 'work'),
+        path.join(projectRoot, 'theme.css'),
+        path.join(projectRoot, 'components.html'),
+        path.join(projectRoot, 'components_preview.html'),
+        path.join(projectRoot, 'components_log.html'),
+        path.join(projectRoot, 'debug_logs'),
+    ];
+
+    for (const target of legacyPaths) {
+        await fs.rm(target, { recursive: true, force: true }).catch(() => undefined);
+    }
+}
+
+// --- Helper: Sync Artifacts (metadata only; files already live in final directories) ---
+async function syncArtifacts(
+    step: string,
+    projectId: string,
+    projectDnaDir: string,
+    projectAssetsDir: string,
+    projectLayoutDir: string,
+    projectAssemblyDir: string,
+    startTime: number
+) {
     console.log(`[API] Starting DB Sync for step: ${step} (Modified since ${startTime})`);
     let output: any = {};
 
     try {
         if (step === 'dna') {
-            const themePath = path.join(projectWorkDir, 'theme.css');
+            const themePath = path.join(projectDnaDir, 'theme.css');
             if ((await fs.stat(themePath).catch(() => false))) {
                 const stats = await fs.stat(themePath);
-                await archiveFile(projectId, 'dna', themePath, 'theme.css', undefined, startTime);
+                await registerArtifact(projectId, themePath, 'theme.css', 'theme_css', startTime);
                 output = { size: stats.size };
             }
         }
         else if (step === 'assets') {
-            const componentsPath = path.join(projectWorkDir, 'components.html');
-            const previewPath = path.join(projectWorkDir, 'components_preview.html');
-            if ((await fs.stat(componentsPath).catch(() => false))) await archiveFile(projectId, 'assets', componentsPath, 'components.html', undefined, startTime);
-            if ((await fs.stat(previewPath).catch(() => false))) await archiveFile(projectId, 'assets', previewPath, 'components_preview.html', undefined, startTime);
+            const componentsPath = path.join(projectAssetsDir, 'components.html');
+            const previewPath = path.join(projectAssetsDir, 'components_preview.html');
+            if ((await fs.stat(componentsPath).catch(() => false))) await registerArtifact(projectId, componentsPath, 'components.html', 'html_assets', startTime);
+            if ((await fs.stat(previewPath).catch(() => false))) await registerArtifact(projectId, previewPath, 'components_preview.html', 'html_assets', startTime);
             output = { generated: true };
         }
         else if (step === 'layout') {
-            // Archive all HTMLs
-            if ((await fs.stat(projectHtmlDir).catch(() => false))) {
-                const files = await fs.readdir(projectHtmlDir);
+            if ((await fs.stat(projectLayoutDir).catch(() => false))) {
+                const files = await fs.readdir(projectLayoutDir);
                 const htmlFiles = files.filter(f => f.endsWith('.html'));
-                for (const f of htmlFiles) await archiveFile(projectId, 'layout', path.join(projectHtmlDir, f), f, undefined, startTime);
-                // Archive Images
-                const imagesPath = path.join(projectHtmlDir, 'images');
-                if ((await fs.stat(imagesPath).catch(() => false))) await archiveFile(projectId, 'layout', imagesPath, 'images', undefined, startTime);
+                for (const f of htmlFiles) {
+                    await registerArtifact(projectId, path.join(projectLayoutDir, f), f, 'html_slide', startTime);
+                }
 
                 output = { count: htmlFiles.length, files: htmlFiles };
             }
         }
         else if (step === 'assembly') {
+            const projectFinalOutput = path.join(projectAssemblyDir, 'output.pptx');
             if ((await fs.stat(projectFinalOutput).catch(() => false))) {
                 const stats = await fs.stat(projectFinalOutput);
-                await archiveFile(projectId, 'assembly', projectFinalOutput, 'output.pptx', undefined, startTime);
+                await registerArtifact(projectId, projectFinalOutput, 'output.pptx', 'pptx_output', startTime);
                 output = { size: stats.size };
             }
         }
@@ -247,27 +231,34 @@ export async function POST(request: Request) {
         };
 
         // --- Dynamic Paths Resolution ---
-        let projectWorkDir = WORK_DIR;
         let projectBriefPath = BRIEF_PATH;
         let projectDraftPath = DRAFT_PATH;
-        let projectHtmlDir = HTML_DIR;
-        let projectPptxDir = PPTX_DIR;
+        let projectDnaDir = WORK_DIR;
+        let projectAssetsDir = WORK_DIR;
+        let projectLayoutDir = HTML_DIR;
+        let projectAssemblyDir = PPTX_DIR;
         let projectFinalOutput = FINAL_OUTPUT;
+        let projectRoot: string | null = null;
 
         if (projectId) {
             const generatedProjectsDir = await getGeneratedProjectsDir();
-            const projectRoot = path.join(generatedProjectsDir, projectId);
+            projectRoot = path.join(generatedProjectsDir, projectId);
             const inputDir = path.join(projectRoot, 'input');
 
-            projectWorkDir = path.join(projectRoot, 'work');
             projectBriefPath = path.join(inputDir, 'brief.json');
             projectDraftPath = path.join(inputDir, 'draft.json');
-
-            projectHtmlDir = path.join(projectWorkDir, '1_html_slides');
-            projectPptxDir = path.join(projectWorkDir, '3_pptx');
-            projectFinalOutput = path.join(projectPptxDir, 'output.pptx');
+            projectDnaDir = path.join(projectRoot, 'dna');
+            projectAssetsDir = path.join(projectRoot, 'assets');
+            projectLayoutDir = path.join(projectRoot, 'layout');
+            projectAssemblyDir = path.join(projectRoot, 'assembly');
+            projectFinalOutput = path.join(projectAssemblyDir, 'output.pptx');
 
             await fs.mkdir(inputDir, { recursive: true });
+            await fs.mkdir(projectDnaDir, { recursive: true });
+            await fs.mkdir(projectAssetsDir, { recursive: true });
+            await fs.mkdir(projectLayoutDir, { recursive: true });
+            await fs.mkdir(projectAssemblyDir, { recursive: true });
+            await cleanupLegacyProjectArtifacts(projectRoot);
         }
 
         // Fetch Brief and Draft
@@ -284,63 +275,32 @@ export async function POST(request: Request) {
             }
         }
 
-        await fs.mkdir(projectWorkDir, { recursive: true });
-
-        // --- RESTORE WORKSPACE ARTIFACTS ---
-        if (projectId) {
-            const generatedProjectsDir = await getGeneratedProjectsDir();
-            const workThemePath = path.join(projectWorkDir, 'theme.css');
-            if (!(await fs.stat(workThemePath).catch(() => false))) {
-                // Try to find the latest version from DB or just filesystem archive?
-                // Filesystem archive is reliable enough for now.
-                const archiveThemePath = path.join(generatedProjectsDir, projectId, 'dna', 'theme.css');
-                if (await fs.stat(archiveThemePath).catch(() => false)) {
-                    await fs.copyFile(archiveThemePath, workThemePath);
-                    console.log(`[API] Restored theme.css`);
-                }
-            }
-
-            const workCompPath = path.join(projectWorkDir, 'components.html');
-            if (!(await fs.stat(workCompPath).catch(() => false))) {
-                const archiveCompPath = path.join(generatedProjectsDir, projectId, 'assets', 'components.html');
-                if (await fs.stat(archiveCompPath).catch(() => false)) {
-                    await fs.copyFile(archiveCompPath, workCompPath);
-                    console.log(`[API] Restored components.html`);
-                }
-            }
-        }
-
         // --- COMMAND GENERATION ---
         let cmdToRun = '';
         let cmdEnv: NodeJS.ProcessEnv = currentEnv;
 
         if (step === 'dna') {
-            const themePath = path.join(projectWorkDir, 'theme.css');
+            const themePath = path.join(projectDnaDir, 'theme.css');
             cmdToRun = `"${ASSEMBLER_VENV}" "${DNA_SCRIPT}" "${projectBriefPath}" "${themePath}"`;
 
         } else if (step === 'assets') {
             const ASSETS_SCRIPT = path.join(SKILLS_DIR, 'generate_assets', 'scripts', 'generate_components.py');
-            const themePath = path.join(projectWorkDir, 'theme.css');
-            cmdToRun = `"${ASSEMBLER_VENV}" "${ASSETS_SCRIPT}" "${themePath}" "${projectWorkDir}" --brief "${projectBriefPath}" --content "${projectDraftPath}"`;
-            if (fromLog) {
-                cmdToRun += ` --from-log "${path.join(projectWorkDir, 'components_log.html')}"`;
-            }
+            const themePath = path.join(projectDnaDir, 'theme.css');
+            cmdToRun = `"${ASSEMBLER_VENV}" "${ASSETS_SCRIPT}" "${themePath}" "${projectAssetsDir}" --brief "${projectBriefPath}" --content "${projectDraftPath}"`;
             cmdEnv = { ...currentEnv, ANTHROPIC_API_KEY: currentEnv.ANTHROPIC_API_KEY || '' };
 
         } else if (step === 'layout') {
-            await fs.mkdir(projectHtmlDir, { recursive: true });
-            const componentsPath = path.join(projectWorkDir, 'components.html');
-            cmdToRun = `"${ASSEMBLER_VENV}" "${BUILDER_SCRIPT}" --brief "${projectBriefPath}" --content "${projectDraftPath}" --dna_dir "${projectWorkDir}" --output "${projectHtmlDir}" --components "${componentsPath}"`;
+            const componentsPath = path.join(projectAssetsDir, 'components.html');
+            cmdToRun = `"${ASSEMBLER_VENV}" "${BUILDER_SCRIPT}" --brief "${projectBriefPath}" --content "${projectDraftPath}" --dna_dir "${projectDnaDir}" --output "${projectLayoutDir}" --components "${componentsPath}"`;
             if (filterSlides && Array.isArray(filterSlides) && filterSlides.length > 0) {
                 cmdToRun += ` --slides "${filterSlides.join(',')}"`;
             }
             if (fromLog) {
-                cmdToRun += ` --from-log "${path.join(projectHtmlDir, 'debug_logs')}"`;
+                cmdToRun += ` --from-log "${path.join(projectLayoutDir, 'debug_logs')}"`;
             }
 
         } else if (step === 'assembly') {
-            await fs.mkdir(projectPptxDir, { recursive: true });
-            cmdToRun = `node "${ASSEMBLER_SCRIPT}" "${projectHtmlDir}" "${projectFinalOutput}"`;
+            cmdToRun = `node "${ASSEMBLER_SCRIPT}" "${projectLayoutDir}" "${projectFinalOutput}"`;
             if (filterSlides && Array.isArray(filterSlides) && filterSlides.length > 0) {
                 cmdToRun += ` --slides "${filterSlides.join(',')}"`;
             }
@@ -350,7 +310,7 @@ export async function POST(request: Request) {
         }
 
         if (step === 'metrics') {
-            const htmlDirExists = await fs.stat(projectHtmlDir).catch(() => false);
+            const htmlDirExists = await fs.stat(projectLayoutDir).catch(() => false);
             if (!htmlDirExists) {
                 return NextResponse.json(
                     { success: false, error: 'No layout HTML found. Run Layout Architect first.' },
@@ -358,7 +318,7 @@ export async function POST(request: Request) {
                 );
             }
 
-            const htmlFiles = (await fs.readdir(projectHtmlDir))
+            const htmlFiles = (await fs.readdir(projectLayoutDir))
                 .filter((file) => file.endsWith('.html') && file !== 'index.html')
                 .sort();
 
@@ -373,7 +333,7 @@ export async function POST(request: Request) {
             const failedFiles: string[] = [];
 
             for (const fileName of htmlFiles) {
-                const htmlPath = path.join(projectHtmlDir, fileName);
+                const htmlPath = path.join(projectLayoutDir, fileName);
                 outputs.push(`\n=== Linting ${fileName} ===\n`);
                 try {
                     const lintOutput = await runCommand(`"${ASSEMBLER_VENV}" "${LINT_SCRIPT}" "${htmlPath}"`, currentEnv);
@@ -431,7 +391,18 @@ export async function POST(request: Request) {
 
             const syncCallback = async () => {
                 if (projectId) {
-                    await syncArtifacts(step, projectId, projectWorkDir, projectHtmlDir, projectFinalOutput, startTime);
+                    await syncArtifacts(
+                        step,
+                        projectId,
+                        projectDnaDir,
+                        projectAssetsDir,
+                        projectLayoutDir,
+                        projectAssemblyDir,
+                        startTime
+                    );
+                    if (projectRoot) {
+                        await cleanupLegacyProjectArtifacts(projectRoot);
+                    }
                 }
             };
 

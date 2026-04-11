@@ -84,12 +84,20 @@ Typical structure:
       brief.json
       draft.json
       images/
-    work/
-      1_html_slides/
-      3_pptx/
+    dna/
+      theme.css
+    assets/
+      components.html
+      components_preview.html
+    layout/
+      index.html
+      images/
+      slide_*.html
+    assembly/
+      output.pptx
 ```
 
-That means your draft, brief, uploaded images, generated HTML, and PPT output are all easy to inspect and reuse.
+That means your draft, brief, uploaded images, generated theme, reusable components, HTML slides, and final PPT output are all easy to inspect and reuse without duplicated `work/` copies.
 
 ## Why The Local-First Model Matters
 
@@ -123,7 +131,6 @@ This keeps the open-source version simpler, more reproducible, and easier to mai
 Notes:
 
 - The frontend runs in local-storage mode by default
-- Supabase is optional, not required
 - LLM-backed draft and brief generation requires the relevant API key in the frontend environment
 
 ## Quick Start

@@ -229,22 +229,12 @@ Then, using the Visual DNA, generate the specific HTML Component Matrix requeste
             buffer = ""
             current_component_name = None
             
-            # Helper to append to log file incrementally
-            log_file_path = output_dir / "components_log.html"
-            # Clear file first
-            with open(log_file_path, 'w', encoding='utf-8') as f:
-                f.write("<!-- Stream started -->\n")
-            
             for chunk in response:
                 if chunk.choices[0].delta.content is not None:
                      content_chunk = chunk.choices[0].delta.content
                      generated_html += content_chunk
                      buffer += content_chunk
-                     
-                     # Append to file immediately (Real-time Writing)
-                     with open(log_file_path, 'a', encoding='utf-8') as f:
-                         f.write(content_chunk)
-                     
+
                      # Logic to detect Component Start
                      if 'data-name="' in buffer and not current_component_name:
                          try:
@@ -295,13 +285,6 @@ Then, using the Visual DNA, generate the specific HTML Component Matrix requeste
 
     logger.info(f"Generated HTML length: {len(generated_html)} chars")
     
-    # Save raw generated HTML to log for future caching/testing
-    log_file_path = output_dir / "components_log.html"
-    save_file(log_file_path, generated_html)
-    logger.info(f"Saved generation log to: {log_file_path}")
-
-    # Inject into Templates
-
     # Inject into Templates
     # 1. Machine Template
     machine_template_path = resources_dir / "components_template.html"
@@ -347,9 +330,6 @@ Then, using the Visual DNA, generate the specific HTML Component Matrix requeste
     else:
         logger.warning(f"Preview template not found at {preview_template_path}, skipping preview generation.")
     
-    # Copy theme.css to output dir (optional now for preview, but good for reference)
-    save_file(output_dir / "theme.css", theme_css)
-
     return True
 
 

@@ -1,4 +1,4 @@
-# PPT Design
+# PPT Factory
 
 Turn a structured brief into production-ready HTML slides and a final PPTX, with a local-first workflow that keeps your project files visible on disk.
 
